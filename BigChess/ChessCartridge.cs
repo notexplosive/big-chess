@@ -8,74 +8,127 @@ using ExplogineMonoGame.Data;
 using ExplogineMonoGame.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 
 namespace BigChess;
 
 public class ChessCartridge : BasicGameCartridge, IHotReloadable
 {
-    private Assets _assets;
-    private SpriteSheet _spriteSheet;
-    private Camera _camera;
-    public override CartridgeConfig CartridgeConfig => new(Constants.RenderResolution);
+    private readonly Assets _assets;
+    private readonly Camera _camera;
+    private readonly DiegeticUi _diegeticUI;
+    private readonly ChessGame _game;
+    private readonly ChessInput _input;
+    private SpriteSheet _spriteSheet = null!;
+    private readonly UiState _uiState;
 
     public ChessCartridge(IRuntime runtime) : base(runtime)
     {
+        _assets = new Assets();
+        _input = new ChessInput();
+        _game = new ChessGame();
+        _uiState = new UiState();
+        _diegeticUI = new DiegeticUi(_uiState);
+        _camera = new Camera(Constants.RenderResolution.ToRectangleF(), Constants.RenderResolution);
+
+        _game.Pieces.Add(new ChessPiece
+            {Position = new Point(3, 3), PieceType = PieceType.Knight, Color = PieceColor.Black});
+        _game.Pieces.Add(new ChessPiece
+            {Position = new Point(3, 5), PieceType = PieceType.Knight, Color = PieceColor.White});
+
+        _input.ClickedSquare += TrySelectPieceAt;
+    }
+
+    public override CartridgeConfig CartridgeConfig => new(Constants.RenderResolution);
+
+    public void OnHotReload()
+    {
+        Client.Debug.Log("Hot Reloaded!");
+    }
+
+    private void TrySelectPieceAt(Point position)
+    {
+        var piece = _game.GetPieceAt(position);
+        if (piece != null)
+        {
+            _uiState.SelectedPiece = piece;
+        }
+        else
+        {
+            _uiState.SelectedPiece = null;
+        }
     }
 
     public override void OnCartridgeStarted()
     {
         _spriteSheet = _assets.GetAsset<SpriteSheet>("Pieces");
-        _camera = new Camera(Constants.RenderResolution.ToRectangleF(), Constants.RenderResolution);
     }
 
     public override void UpdateInput(ConsumableInput input, HitTestStack hitTestStack)
     {
+        var layer = hitTestStack.AddLayer(_camera.ScreenToCanvas, Depth.Middle);
+        HandleCameraControls(input, layer);
+
+        foreach (var boardRectangle in Constants.BoardRectangles())
+        {
+            layer.AddZone(boardRectangle.PixelRect, Depth.Middle,
+                () => { _input.OnHoverSquare(input, boardRectangle.GridPosition); });
+        }
+    }
+
+    private void HandleCameraControls(ConsumableInput input, HitTestStack layer)
+    {
         if (input.Mouse.GetButton(MouseButton.Middle, true).IsDown)
         {
-            var newBounds = _camera.ViewBounds;
-            newBounds = newBounds.Moved(-input.Mouse.Delta(hitTestStack.WorldMatrix * _camera.ScreenToCanvas));
-            // newBounds = newBounds.ConstrainedTo(Constants.TotalBoardSizePixels.ToRectangleF().Inflated(Constants.TileSize, Constants.TileSize));
-            _camera.ViewBounds = newBounds;
+            _camera.ViewBounds = _camera.ViewBounds.Moved(-input.Mouse.Delta(layer.WorldMatrix));
         }
 
         var scrollDelta = input.Mouse.ScrollDelta(true);
-        
+
         if (scrollDelta > 0 && _camera.ViewBounds.Height > Constants.TileSize * 8)
         {
-            _camera.ViewBounds = _camera.ViewBounds.GetZoomedInBounds(30, input.Mouse.Position(hitTestStack.WorldMatrix * _camera.ScreenToCanvas));
+            _camera.ViewBounds = _camera.ViewBounds.GetZoomedInBounds(30,
+                input.Mouse.Position(layer.WorldMatrix));
         }
-        
+
         if (scrollDelta < 0)
         {
-            _camera.ViewBounds = _camera.ViewBounds.GetZoomedOutBounds(30, input.Mouse.Position(hitTestStack.WorldMatrix * _camera.ScreenToCanvas));
+            _camera.ViewBounds = _camera.ViewBounds.GetZoomedOutBounds(30,
+                input.Mouse.Position(layer.WorldMatrix));
         }
+
+        _camera.ViewBounds = _camera.ViewBounds.ConstrainedTo(Constants.TotalBoardSizePixels.ToRectangleF()
+            .Inflated(_camera.ViewBounds.Width - Constants.TileSize, _camera.ViewBounds.Height - Constants.TileSize));
     }
 
     public override void Update(float dt)
     {
+        _diegeticUI.Update(dt);
     }
 
     public override void Draw(Painter painter)
     {
         painter.BeginSpriteBatch(_camera.CanvasToScreen);
-        _spriteSheet.DrawFrameAsRectangle(painter, 0, new RectangleF(0,0,Constants.TileSize,Constants.TileSize), new DrawSettings());
 
-        for (var y = 0; y < Constants.BoardLength; y++)
+        foreach (var rectangle in Constants.BoardRectangles())
         {
-            for (var x = 0; x < Constants.BoardLength; x++)
+            var color = Color.Green.DesaturatedBy(0.45f);
+
+            if (rectangle.IsLight)
             {
-                var color = Color.Green.DimmedBy(0.25f);
-
-                if (x % 2 != y % 2)
-                {
-                    color = Color.YellowGreen.DimmedBy(0.25f);
-                }
-
-                painter.DrawRectangle(new RectangleF(new Vector2(x,y) * Constants.TileSize, new Vector2(Constants.TileSize)), new DrawSettings{Color = color, Depth = Depth.Back});
+                color = Color.YellowGreen.DimmedBy(0.25f);
             }
+
+            painter.DrawRectangle(rectangle.PixelRect, new DrawSettings {Color = color, Depth = Depth.Back});
         }
-        
+
+        foreach (var piece in _game.Pieces)
+        {
+            _spriteSheet.DrawFrameAsRectangle(painter, Constants.FrameIndex(piece.PieceType, piece.Color),
+                piece.PixelRectangle, new DrawSettings {Depth = Depth.Middle});
+        }
+
+        _diegeticUI.Draw(painter);
+
         painter.EndSpriteBatch();
     }
 
@@ -85,27 +138,20 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
 
     public override IEnumerable<ILoadEvent> LoadEvents(Painter painter)
     {
-        _assets = new Assets();
         var content = new RealFileSystem("DynamicContent");
 
         foreach (var fileName in content.GetFilesAt(".", "png"))
         {
             var texture = Texture2D.FromFile(Client.Graphics.Device, content.RootPath + "/" + fileName);
             yield return new VoidLoadEvent(fileName,
-                ()=>
-                {
-                    _assets.AddAsset(fileName.RemoveFileExtension(), new TextureAsset(texture));
-                });
+                () => { _assets.AddAsset(fileName.RemoveFileExtension(), new TextureAsset(texture)); });
         }
 
-        yield return new VoidLoadEvent("SpriteSheet", () =>
-        {
-            _assets.AddAsset("Pieces", new GridBasedSpriteSheet(_assets.GetTexture("pieces"), new Point(Constants.PieceRenderSize)));
-        });
-    }
-
-    public void OnHotReload()
-    {
-        Client.Debug.Log("Hot Reloaded!");
+        yield return new VoidLoadEvent("SpriteSheet",
+            () =>
+            {
+                _assets.AddAsset("Pieces",
+                    new GridBasedSpriteSheet(_assets.GetTexture("pieces"), new Point(Constants.PieceRenderSize)));
+            });
     }
 }
