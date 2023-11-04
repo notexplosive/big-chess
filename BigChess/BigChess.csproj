@@ -18,6 +18,17 @@
         <EmbeddedResource Include="Icon.ico" />
         <EmbeddedResource Include="Icon.bmp" />
     </ItemGroup>
+
+    <Target Name="CopyAssets" AfterTargets="Build">
+        <ItemGroup>
+            <AssetFiles Include="$(SolutionDir)DynamicContent\**\*" />
+        </ItemGroup>
+
+        <Copy SourceFiles="@(AssetFiles)" DestinationFiles="@(AssetFiles->'$(TargetDir)DynamicContent\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+
+        <Message Importance="High" Text="Copying assets: @(AssetFiles)" />
+    </Target>
+
     <ItemGroup>
         <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
         <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.1.303" />
