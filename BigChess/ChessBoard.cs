@@ -32,14 +32,15 @@ public class ChessBoard
         var oldPosition = _pieces[id].Position;
 
         var currentOccupant = GetPieceAt(targetPosition);
-
+                
+        _pieces[id] = _pieces[id] with {Position = targetPosition, HasMoved = true};
+        PieceMoved?.Invoke(_pieces[id], oldPosition, targetPosition);
+        
         if (currentOccupant.HasValue)
         {
             DestroyPiece(currentOccupant.Value.Id);
         }
-        
-        _pieces[id] = _pieces[id] with {Position = targetPosition};
-        PieceMoved?.Invoke(_pieces[id], oldPosition, targetPosition);
+
     }
 
     public void AddPiece(ChessPiece pieceTemplate)

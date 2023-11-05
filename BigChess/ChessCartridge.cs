@@ -45,11 +45,26 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             {Position = new Point(4, 5), PieceType = PieceType.Knight, Color = PieceColor.White});
         
         _board.AddPiece(new ChessPiece
+            {Position = new Point(6, 5), PieceType = PieceType.Knight, Color = PieceColor.Black});
+        
+        _board.AddPiece(new ChessPiece
             {Position = new Point(10, 10), PieceType = PieceType.Bishop, Color = PieceColor.White});
         
         _board.AddPiece(new ChessPiece
             {Position = new Point(15, 10), PieceType = PieceType.Rook, Color = PieceColor.White});
+        
+        _board.AddPiece(new ChessPiece
+            {Position = new Point(5, 10), PieceType = PieceType.Pawn, Color = PieceColor.White});
+        
+        _board.AddPiece(new ChessPiece
+            {Position = new Point(16, 11), PieceType = PieceType.Pawn, Color = PieceColor.White});
 
+        _board.AddPiece(new ChessPiece
+            {Position = new Point(16, 5), PieceType = PieceType.Queen, Color = PieceColor.White});
+        
+        _board.AddPiece(new ChessPiece
+            {Position = new Point(13, 4), PieceType = PieceType.King, Color = PieceColor.White});
+        
         _input.ClickedSquare += ClickOnSquare;
         _input.DragInitiated += DragInitiated;
         _input.DragComplete += DragComplete;

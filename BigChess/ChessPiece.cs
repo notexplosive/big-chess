@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using ExplogineMonoGame.Data;
 using Microsoft.Xna.Framework;
 
 namespace BigChess;
@@ -9,6 +8,7 @@ public readonly record struct ChessPiece
     public int Id { get; init; }
     public Point Position { get; init; }
     public PieceType PieceType { get; init; }
+    public bool HasMoved { get; init; }
     public PieceColor Color { get; init; }
 
     public List<Point> GetValidMoves(ChessBoard board)
@@ -40,8 +40,72 @@ public readonly record struct ChessPiece
             Project(board, new Point(-1, 0), result);
             Project(board, new Point(1, 0), result);
         }
+        else if (PieceType == PieceType.Queen)
+        {
+            Project(board, new Point(0, 1), result);
+            Project(board, new Point(0, -1), result);
+            Project(board, new Point(-1, 0), result);
+            Project(board, new Point(1, 0), result);
+            Project(board, new Point(1, 1), result);
+            Project(board, new Point(1, -1), result);
+            Project(board, new Point(-1, 1), result);
+            Project(board, new Point(-1, -1), result);
+        }
+        else if (PieceType == PieceType.King)
+        {
+            // King is allowed to move even if it puts itself in check
+            AddIfEmptyOrEnemy(Position + new Point(0, 1), board, result);
+            AddIfEmptyOrEnemy(Position + new Point(0, -1), board, result);
+            AddIfEmptyOrEnemy(Position + new Point(-1, 0), board, result);
+            AddIfEmptyOrEnemy(Position + new Point(1, 0), board, result);
+            AddIfEmptyOrEnemy(Position + new Point(1, 1), board, result);
+            AddIfEmptyOrEnemy(Position + new Point(1, -1), board, result);
+            AddIfEmptyOrEnemy(Position + new Point(-1, 1), board, result);
+            AddIfEmptyOrEnemy(Position + new Point(-1, -1), board, result);
+        }
+        else if (PieceType == PieceType.Pawn)
+        {
+            var oneStep = Position + Forward(Color);
+            if (board.IsEmptySquare(oneStep))
+            {
+                result.Add(oneStep);
+
+                if (!HasMoved)
+                {
+                    var twoStep = oneStep + Forward(Color);
+                    if (board.IsEmptySquare(twoStep))
+                    {
+                        result.Add(twoStep);
+                    }
+                }
+            }
+
+            var aheadRight = Position + Forward(Color) + new Point(1, 0);
+            var aheadLeft = Position + Forward(Color) + new Point(-1, 0);
+            AddIfEnemy(board, aheadLeft, result);
+            AddIfEnemy(board, aheadRight, result);
+        }
 
         return result;
+    }
+
+    private void AddIfEnemy(ChessBoard board, Point position, List<Point> result)
+    {
+        var piece = board.GetPieceAt(position);
+        if (piece.HasValue && piece.Value.Color != Color)
+        {
+            result.Add(position);
+        }
+    }
+
+    private Point Forward(PieceColor color)
+    {
+        if (color == PieceColor.White)
+        {
+            return new Point(0, -1);
+        }
+
+        return new Point(0, 1);
     }
 
     private void Project(ChessBoard board, Point step, List<Point> result)
@@ -68,7 +132,6 @@ public readonly record struct ChessPiece
         {
             result.Add(target);
         }
-        
     }
 
     public override string ToString()

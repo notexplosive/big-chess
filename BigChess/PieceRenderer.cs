@@ -24,8 +24,8 @@ public class PieceRenderer : AnimatedObject
 
     private readonly int _pieceId;
     private readonly TweenableFloat _scale = new(1f);
-    private readonly SequenceTween _tween = new();
     private bool _isDrawingPieceExactly = true;
+    private SequenceTween _isolatedTween = new();
 
     public PieceRenderer(ChessPiece originalPiece, ChessBoard board, Assets assets)
     {
@@ -52,7 +52,12 @@ public class PieceRenderer : AnimatedObject
             _fakePiecePosition.Value = position;
         }
 
-        var rectangle = new RectangleF(position, new Vector2(Constants.TileSize)).MovedByOrigin(DrawOrigin.Center);
+        var rectangle = new RectangleF(position, new Vector2(Constants.TileSize));
+
+        rectangle = rectangle.Inflated(new Vector2(Constants.TileSize) * _scale.Value / 2f -  new Vector2(Constants.TileSize / 2f));
+
+        rectangle = rectangle.MovedByOrigin(DrawOrigin.Center);
+        
         _assets.GetAsset<SpriteSheet>("Pieces").DrawFrameAsRectangle(painter, frame, rectangle,
             new DrawSettings
             {
@@ -85,17 +90,12 @@ public class PieceRenderer : AnimatedObject
 
     public override void Update(float dt)
     {
-        _tween.Update(dt);
-
-        if (_tween.IsDone())
-        {
-            _tween.Clear();
-        }
+        _isolatedTween.Update(dt);
     }
 
-    public void AnimateMove(ChessPiece piece, Point newPosition, ChessGameState gameState)
+    public void AnimateMove(SequenceTween tween, ChessPiece piece, Point newPosition, ChessGameState gameState)
     {
-        _tween.Add(new CallbackTween(() =>
+        tween.Add(new CallbackTween(() =>
         {
             _isDrawingPieceExactly = false;
             gameState.StopInput();
@@ -104,7 +104,7 @@ public class PieceRenderer : AnimatedObject
         var duration =
             ((_fakePiecePosition.Value - Constants.ToWorldPosition(newPosition) +
               new Vector2(Constants.TileSize / 2f)) / Constants.TileSize).Length() / 20f;
-        _tween.Add(
+        tween.Add(
                 new DynamicTween(() =>
                 {
                     var result = new MultiplexTween();
@@ -123,19 +123,19 @@ public class PieceRenderer : AnimatedObject
                     return result;
                 }))
             ;
-        _tween.Add(new CallbackTween(() =>
+        tween.Add(new CallbackTween(() =>
         {
             _isDrawingPieceExactly = true;
             gameState.RestoreInput();
         }));
     }
 
-    public void AnimateDropAt(Point destination)
+    public void AnimateDropAt(SequenceTween tween, Point destination)
     {
-        _tween.Add(new CallbackTween(() => { _isDrawingPieceExactly = false; }));
+        tween.Add(new CallbackTween(() => { _isDrawingPieceExactly = false; }));
 
         var duration = 0.15f;
-        _tween.Add(
+        tween.Add(
             new MultiplexTween()
                 .AddChannel(_fakePiecePosition.TweenTo(Constants.ToWorldPosition(destination), duration / 4f,
                     Ease.Linear))
@@ -146,7 +146,7 @@ public class PieceRenderer : AnimatedObject
                 )
         );
 
-        _tween.Add(new CallbackTween(() => { _isDrawingPieceExactly = true; }));
+        tween.Add(new CallbackTween(() => { _isDrawingPieceExactly = true; }));
     }
 
     public void Drag(Vector2 position)
@@ -156,31 +156,35 @@ public class PieceRenderer : AnimatedObject
         _scale.Value = 1.2f;
     }
 
-    public void FadeOut()
+    public void FadeOut(SequenceTween tween)
     {
-        _tween.Add(new CallbackTween(() => { _isDrawingPieceExactly = false; }));
+        tween.Add(new CallbackTween(() =>
+        {
+            _isolatedTween.Add(new CallbackTween(() => { _isDrawingPieceExactly = false; }));
 
-        var duration = 1f;
+            var duration = 1f;
 
-        var tweenableX = new TweenableFloat(() => _fakePiecePosition.Value.X,
-            x => _fakePiecePosition.Value = new Vector2(x, _fakePiecePosition.Value.Y));
-        var tweenableY = new TweenableFloat(() => _fakePiecePosition.Value.Y,
-            y => _fakePiecePosition.Value = new Vector2(_fakePiecePosition.Value.X, y));
+            var tweenableX = new TweenableFloat(() => _fakePiecePosition.Value.X,
+                x => _fakePiecePosition.Value = new Vector2(x, _fakePiecePosition.Value.Y));
+            var tweenableY = new TweenableFloat(() => _fakePiecePosition.Value.Y,
+                y => _fakePiecePosition.Value = new Vector2(_fakePiecePosition.Value.X, y));
 
-        _tween.Add(
-            new MultiplexTween()
-                .AddChannel(
-                    new SequenceTween()
-                        .Add(tweenableY.TweenTo(tweenableY.Value - Constants.TileSize * 2, duration / 2,
-                            Ease.QuadFastSlow))
-                        .Add(tweenableY.TweenTo(tweenableY, duration / 2, Ease.QuadSlowFast))
-                )
-                .AddChannel(tweenableX.TweenTo(
-                    tweenableX + Client.Random.Dirty.NextSign() * Client.Random.Dirty.NextFloat(0.25f, 1f) * Constants.TileSize, duration, Ease.Linear))
-                .AddChannel(_angle.TweenTo(MathF.PI * 3, duration, Ease.Linear))
-                .AddChannel(_opacity.TweenTo(0, duration * 0.9f, Ease.Linear))
-        );
+            _isolatedTween.Add(
+                new MultiplexTween()
+                    .AddChannel(
+                        new SequenceTween()
+                            .Add(tweenableY.TweenTo(tweenableY.Value - Constants.TileSize * 2, duration / 2,
+                                Ease.QuadFastSlow))
+                            .Add(tweenableY.TweenTo(tweenableY, duration / 2, Ease.QuadSlowFast))
+                    )
+                    .AddChannel(tweenableX.TweenTo(
+                        tweenableX + Client.Random.Dirty.NextSign() * Client.Random.Dirty.NextFloat(0.25f, 1f) * Constants.TileSize, duration, Ease.Linear))
+                    .AddChannel(_angle.TweenTo(MathF.PI * 3, duration, Ease.Linear))
+                    .AddChannel(_opacity.TweenTo(0, duration * 0.9f, Ease.Linear))
+            );
 
-        _tween.Add(new CallbackTween(() => { _isDrawingPieceExactly = true; }));
+            _isolatedTween.Add(new CallbackTween(Destroy));
+        }));
+        
     }
 }

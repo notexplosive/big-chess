@@ -3,6 +3,7 @@ using ExplogineMonoGame;
 using ExplogineMonoGame.AssetManagement;
 using ExplogineMonoGame.Data;
 using ExplogineMonoGame.Rails;
+using ExTween;
 using Microsoft.Xna.Framework;
 
 namespace BigChess;
@@ -17,6 +18,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
 
     private readonly List<TargetSquare> _targetSquares = new();
     private PieceRenderer? _draggedPiece;
+    private SequenceTween _tween = new();
 
     public DiegeticUi(UiState uiState, ChessBoard board, Assets assets, ChessGameState gameState)
     {
@@ -45,6 +47,13 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
 
     public void Update(float dt)
     {
+        _tween.Update(dt);
+
+        if (_tween.IsDone())
+        {
+            _tween.Clear();
+        }
+        
         AnimatedObjects.UpdateAll(dt);
     }
     
@@ -61,7 +70,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     {
         if (_pieceRenderers.TryGetValue(piece.Id, out var result))
         {
-            result.AnimateMove(piece, newPosition, _gameState);
+            result.AnimateMove(_tween, piece, newPosition, _gameState);
         }
     }
 
@@ -69,7 +78,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     {
         if (_pieceRenderers.TryGetValue(piece.Id, out var result))
         {
-            result.FadeOut();
+            result.FadeOut(_tween);
         }
     }
 
@@ -123,7 +132,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     {
         if (_draggedPiece != null)
         {
-            _draggedPiece.AnimateDropAt(destination);
+            _draggedPiece.AnimateDropAt(_tween, destination);
         }
 
         _draggedPiece = null;
@@ -136,7 +145,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
             var piece = _draggedPiece.GetPiece();
             if (piece.HasValue)
             {
-                _draggedPiece.AnimateDropAt(piece.Value.Position);
+                _draggedPiece.AnimateDropAt(_tween, piece.Value.Position);
             }
         }
         _draggedPiece = null;
