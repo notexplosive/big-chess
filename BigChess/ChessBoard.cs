@@ -16,7 +16,7 @@ public class ChessBoard
     }
 
     public int IdPool { get; set; }
-    public event Action<ChessPiece, Point, Point>? PieceMoved;
+    public event Action<ChessMove>? PieceMoved;
     public event Action<ChessPiece>? PieceAdded;
     public event Action<ChessPiece>? PiecePromoted;
     public event Action<ChessPiece>? PieceCaptured;
@@ -35,20 +35,22 @@ public class ChessBoard
         return null;
     }
 
-    public void MovePiece(int id, Point targetPosition)
+    public void MovePiece(ChessMove move)
     {
-        var oldPosition = _pieces[id].Position;
-
-        var currentOccupant = GetPieceAt(targetPosition);
-                
-        _pieces[id] = _pieces[id] with {Position = targetPosition, HasMoved = true};
-        PieceMoved?.Invoke(_pieces[id], oldPosition, targetPosition);
+        var id = move.PieceBeforeMove.Id;
+        var currentOccupant = GetPieceAt(move.Position);
+        _pieces[id] = _pieces[id] with {Position = move.Position, HasMoved = true};
+        PieceMoved?.Invoke(move);
 
         if (currentOccupant.HasValue)
         {
             CapturePiece(currentOccupant.Value.Id);
         }
 
+        if (move.NextMove != null)
+        {
+            MovePiece(move.NextMove);
+        }
     }
 
     public ChessPiece AddPiece(ChessPiece pieceTemplate)

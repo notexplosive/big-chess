@@ -70,6 +70,18 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         
         _board.AddPiece(new ChessPiece
             {Position = new Point(13, 4), PieceType = PieceType.King, Color = PieceColor.White});
+        
+        _board.AddPiece(new ChessPiece
+            {Position = new Point(13, 2), PieceType = PieceType.Rook, Color = PieceColor.White});
+        
+        _board.AddPiece(new ChessPiece
+            {Position = new Point(6, 4), PieceType = PieceType.Rook, Color = PieceColor.White});
+        
+        _board.AddPiece(new ChessPiece
+            {Position = new Point(20, 4), PieceType = PieceType.Rook, Color = PieceColor.White});
+        
+        _board.AddPiece(new ChessPiece
+            {Position = new Point(13, 10), PieceType = PieceType.Rook, Color = PieceColor.White});
 
         _input.SquareClicked += ClickOn;
         _input.DragInitiated += DragInitiated;
@@ -103,9 +115,10 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     
     private void DragSucceeded(Point dragStart, Point position)
     {
-        if (SelectedPieceCanMoveTo(position))
+        var move = GetSelectedPieceValidMoveTo(position);
+        if (move != null)
         {
-            _board.MovePiece(_uiState.SelectedPiece!.Value.Id, position);
+            _board.MovePiece(move);
             _diegeticUi.DropDraggedPiece(position);
             _uiState.SelectedPiece = null;
         }
@@ -125,9 +138,10 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             return;
         }
 
-        if (SelectedPieceCanMoveTo(position))
+        var move = GetSelectedPieceValidMoveTo(position);
+        if (move != null)
         {
-            _board.MovePiece(_uiState.SelectedPiece!.Value.Id, position);
+            _board.MovePiece(move);
             _uiState.SelectedPiece = null;
         }
         else
@@ -140,9 +154,22 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             
     }
 
-    private bool SelectedPieceCanMoveTo(Point position)
+    private ChessMove? GetSelectedPieceValidMoveTo(Point position)
     {
-        return _uiState.SelectedPiece.HasValue && _uiState.SelectedPiece.Value.GetValidMoves(_board).Contains(position);
+        if (_uiState.SelectedPiece.HasValue)
+        {
+            var selectedPiece = _uiState.SelectedPiece.Value;
+            var validMoves = selectedPiece.GetValidMoves(_board);
+            var index = validMoves.FindIndex(move => move.Position == position);
+            if (index == -1)
+            {
+                return null;
+            }
+
+            return validMoves[index];
+        }
+
+        return null;
     }
 
     private bool AttemptSelect(ChessPiece? piece)

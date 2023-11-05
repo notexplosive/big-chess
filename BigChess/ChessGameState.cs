@@ -26,8 +26,9 @@ public class ChessGameState
         _playerIsActionable = true;
     }
 
-    public void OnPieceMoved(ChessPiece piece, Point oldPosition, Point newPosition)
+    public void OnPieceMoved(ChessMove move)
     {
+        var piece = move.PieceAfterMove;
         if (piece.PieceType == PieceType.Pawn)
         {
             if (!Constants.IsWithinBoard(piece.Position + Constants.Forward(piece.Color)))

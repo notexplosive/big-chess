@@ -96,11 +96,11 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
         }
     }
 
-    private void OnPieceMoved(ChessPiece piece, Point previousPosition, Point newPosition)
+    private void OnPieceMoved(ChessMove move)
     {
-        if (_pieceRenderers.TryGetValue(piece.Id, out var result))
+        if (_pieceRenderers.TryGetValue(move.PieceBeforeMove.Id, out var result))
         {
-            result.AnimateMove(_tween, piece, newPosition, _gameState);
+            result.AnimateMove(_tween, move.PieceBeforeMove, move.Position, _gameState);
         }
     }
 
@@ -136,15 +136,15 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
 
             foreach (var landingPosition in piece.Value.GetValidMoves(_board))
             {
-                if (_board.GetPieceAt(landingPosition) != null)
+                if (_board.GetPieceAt(landingPosition.Position) != null)
                 {
-                    _targetSquares.Add(AnimatedObjects.Add(new AttackSquare(startingPosition, landingPosition)));
+                    _targetSquares.Add(AnimatedObjects.Add(new AttackSquare(startingPosition, landingPosition.Position)));
                 }
 
-                if (Constants.IsWithinBoard(landingPosition))
+                if (Constants.IsWithinBoard(landingPosition.Position))
                 {
-                    var delay = (startingPosition.ToVector2() - landingPosition.ToVector2()).Length() / 100f;
-                    _targetSquares.Add(AnimatedObjects.Add(new MoveSquare(landingPosition, delay)));
+                    var delay = (startingPosition.ToVector2() - landingPosition.Position.ToVector2()).Length() / 100f;
+                    _targetSquares.Add(AnimatedObjects.Add(new MoveSquare(landingPosition.Position, delay)));
                 }
             }
         }

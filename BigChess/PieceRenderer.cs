@@ -104,9 +104,9 @@ public class PieceRenderer : AnimatedObject
 
     public void AnimateMove(SequenceTween tween, ChessPiece piece, Point newPosition, ChessGameState gameState)
     {
+        _isDrawingPieceExactly = false;
         tween.Add(new CallbackTween(() =>
         {
-            _isDrawingPieceExactly = false;
             gameState.StopInput();
         }));
 
@@ -141,10 +141,10 @@ public class PieceRenderer : AnimatedObject
 
     public void AnimateDropAt(SequenceTween tween, Point destination)
     {
-        tween.Add(new CallbackTween(() => { _isDrawingPieceExactly = false; }));
+        _isolatedTween.Add(new CallbackTween(() => { _isDrawingPieceExactly = false; }));
 
         var duration = 0.15f;
-        tween.Add(
+        _isolatedTween.Add(
             new MultiplexTween()
                 .AddChannel(_fakePiecePosition.TweenTo(Constants.ToWorldPosition(destination), duration / 4f,
                     Ease.Linear))
@@ -155,7 +155,7 @@ public class PieceRenderer : AnimatedObject
                 )
         );
 
-        tween.Add(new CallbackTween(() => { _isDrawingPieceExactly = true; }));
+        _isolatedTween.Add(new CallbackTween(() => { _isDrawingPieceExactly = true; }));
     }
 
     public void Drag(SequenceTween tween, Vector2 position)
