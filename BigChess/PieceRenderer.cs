@@ -139,7 +139,7 @@ public class PieceRenderer : AnimatedObject
         }));
     }
 
-    public void AnimateDropAt(SequenceTween tween, Point destination)
+    public void AnimateDropAt(Point destination)
     {
         _isolatedTween.Add(new CallbackTween(() => { _isDrawingPieceExactly = false; }));
 

@@ -175,7 +175,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     {
         if (_draggedPiece != null)
         {
-            _draggedPiece.AnimateDropAt(_tween, destination);
+            _draggedPiece.AnimateDropAt(destination);
         }
 
         _draggedPiece = null;
@@ -188,7 +188,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
             var piece = _draggedPiece.GetPiece();
             if (piece.HasValue)
             {
-                _draggedPiece.AnimateDropAt(_tween, piece.Value.Position);
+                _draggedPiece.AnimateDropAt(piece.Value.Position);
             }
         }
 
