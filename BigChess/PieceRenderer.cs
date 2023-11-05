@@ -158,8 +158,11 @@ public class PieceRenderer : AnimatedObject
         tween.Add(new CallbackTween(() => { _isDrawingPieceExactly = true; }));
     }
 
-    public void Drag(Vector2 position)
+    public void Drag(SequenceTween tween, Vector2 position)
     {
+        tween.SkipToEnd();
+        _isolatedTween.SkipToEnd();
+        
         _isDrawingPieceExactly = false;
         _fakePiecePosition.Value = position;
         _scale.Value = 1.2f;

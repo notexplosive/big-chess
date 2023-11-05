@@ -12,19 +12,19 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
 {
     private readonly Assets _assets;
     private readonly ChessBoard _board;
-    private readonly ChessGameState _gameState;
     private readonly ChessInput _chessInput;
+    private readonly ChessGameState _gameState;
     private readonly Dictionary<int, PieceRenderer> _pieceRenderers = new();
+    private readonly ProposedMoveSquare _proposedMoveSquare;
     private readonly List<TargetSquare> _targetSquares = new();
     private readonly SequenceTween _tween = new();
     private PieceRenderer? _draggedPiece;
     private SelectedSquare? _selection;
-    private ProposedMoveSquare _proposedMoveSquare;
 
     public DiegeticUi(UiState uiState, ChessBoard board, Assets assets, ChessGameState gameState, ChessInput chessInput)
     {
         _proposedMoveSquare = AnimatedObjects.Add(new ProposedMoveSquare());
-        
+
         _board = board;
         _assets = assets;
         _gameState = gameState;
@@ -57,7 +57,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     {
         if (_draggedPiece != null)
         {
-            _draggedPiece.Drag(input.Mouse.Position(hitTestStack.WorldMatrix) - new Vector2(Constants.TileSize) / 2f);
+            _draggedPiece.Drag(_tween,input.Mouse.Position(hitTestStack.WorldMatrix) - new Vector2(Constants.TileSize) / 2f);
         }
     }
 
@@ -72,7 +72,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
             painter.EndSpriteBatch();
         }
     }
-    
+
     private void OnSquareHovered(Point position)
     {
         if (_draggedPiece != null)
@@ -85,12 +85,14 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
             _proposedMoveSquare.Visible = false;
         }
     }
-    
+
     private void OnPiecePromoted(ChessPiece piece)
     {
         if (_pieceRenderers.TryGetValue(piece.Id, out var result))
         {
             result.AnimatePromote();
+
+            AnimatedObjects.Add(new PromotionFanfare(piece, _assets));
         }
     }
 
@@ -109,7 +111,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
             result.FadeOut(_tween);
         }
     }
-    
+
     private void OnPieceDeleted(ChessPiece piece)
     {
         if (_pieceRenderers.TryGetValue(piece.Id, out var result))
@@ -163,7 +165,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     {
         _draggedPiece = _pieceRenderers[piece.Id];
     }
-    
+
     private void OnDragFinished()
     {
         _proposedMoveSquare.Visible = false;
