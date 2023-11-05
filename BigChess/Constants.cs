@@ -88,4 +88,14 @@ public static class Constants
             _ => color
         };
     }
+
+    public static Point Forward(PieceColor color)
+    {
+        if (color == PieceColor.White)
+        {
+            return new Point(0, -1);
+        }
+
+        return new Point(0, 1);
+    }
 }

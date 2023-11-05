@@ -23,7 +23,7 @@ public class ChessInput
 
     public void OnHoverSquare(ConsumableInput input, Point gridPosition)
     {
-        if (!_gameState.PlayerCanInput)
+        if (!_gameState.PlayerCanMovePieces)
         {
             return;
         }

@@ -25,7 +25,8 @@ public class PieceRenderer : AnimatedObject
     private readonly int _pieceId;
     private readonly TweenableFloat _scale = new(1f);
     private bool _isDrawingPieceExactly = true;
-    private SequenceTween _isolatedTween = new();
+    private readonly SequenceTween _isolatedTween = new();
+    private bool _isFadingOut;
 
     public PieceRenderer(ChessPiece originalPiece, ChessBoard board, Assets assets)
     {
@@ -54,10 +55,11 @@ public class PieceRenderer : AnimatedObject
 
         var rectangle = new RectangleF(position, new Vector2(Constants.TileSize));
 
-        rectangle = rectangle.Inflated(new Vector2(Constants.TileSize) * _scale.Value / 2f -  new Vector2(Constants.TileSize / 2f));
+        rectangle = rectangle.Inflated(new Vector2(Constants.TileSize) * _scale.Value / 2f -
+                                       new Vector2(Constants.TileSize / 2f));
 
         rectangle = rectangle.MovedByOrigin(DrawOrigin.Center);
-        
+
         _assets.GetAsset<SpriteSheet>("Pieces").DrawFrameAsRectangle(painter, frame, rectangle,
             new DrawSettings
             {
@@ -91,6 +93,13 @@ public class PieceRenderer : AnimatedObject
     public override void Update(float dt)
     {
         _isolatedTween.Update(dt);
+    }
+
+    public void AnimatePromote()
+    {
+        _isolatedTween.Add(_scale.TweenTo(1.25f, 0.15f, Ease.QuadFastSlow));
+        _isolatedTween.Add(_scale.TweenTo(0.9f, 0.15f, Ease.QuadSlowFast));
+        _isolatedTween.Add(_scale.TweenTo(1f, 0.1f, Ease.QuadFastSlow));
     }
 
     public void AnimateMove(SequenceTween tween, ChessPiece piece, Point newPosition, ChessGameState gameState)
@@ -158,6 +167,7 @@ public class PieceRenderer : AnimatedObject
 
     public void FadeOut(SequenceTween tween)
     {
+        _isFadingOut = true;
         tween.Add(new CallbackTween(() =>
         {
             _isolatedTween.Add(new CallbackTween(() => { _isDrawingPieceExactly = false; }));
@@ -178,13 +188,21 @@ public class PieceRenderer : AnimatedObject
                             .Add(tweenableY.TweenTo(tweenableY, duration / 2, Ease.QuadSlowFast))
                     )
                     .AddChannel(tweenableX.TweenTo(
-                        tweenableX + Client.Random.Dirty.NextSign() * Client.Random.Dirty.NextFloat(0.25f, 1f) * Constants.TileSize, duration, Ease.Linear))
+                        tweenableX + Client.Random.Dirty.NextSign() * Client.Random.Dirty.NextFloat(0.25f, 1f) *
+                        Constants.TileSize, duration, Ease.Linear))
                     .AddChannel(_angle.TweenTo(MathF.PI * 3, duration, Ease.Linear))
                     .AddChannel(_opacity.TweenTo(0, duration * 0.9f, Ease.Linear))
             );
 
             _isolatedTween.Add(new CallbackTween(Destroy));
         }));
-        
+    }
+
+    public void Delete()
+    {
+        if (!_isFadingOut)
+        {
+            Destroy();
+        }
     }
 }

@@ -1,10 +1,15 @@
+using Microsoft.Xna.Framework;
+
 namespace BigChess;
 
 public class ChessGameState
 {
+    private int? _promotingPieceId;
     public PieceColor CurrentTurn { get; private set; }
-
-    public bool PlayerCanInput { get; set; } = true;
+    public bool HasPendingPromotion => _promotingPieceId.HasValue;
+    public int PendingPromotionId => _promotingPieceId ?? -1;
+    public bool PlayerCanMovePieces => _playerIsActionable && !HasPendingPromotion;
+    private bool _playerIsActionable = true;
 
     public void NextTurn()
     {
@@ -13,11 +18,27 @@ public class ChessGameState
 
     public void StopInput()
     {
-        PlayerCanInput = false;
+        _playerIsActionable = false;
     }
 
     public void RestoreInput()
     {
-        PlayerCanInput = true;
+        _playerIsActionable = true;
+    }
+
+    public void OnPieceMoved(ChessPiece piece, Point oldPosition, Point newPosition)
+    {
+        if (piece.PieceType == PieceType.Pawn)
+        {
+            if (!Constants.IsWithinBoard(piece.Position + Constants.Forward(piece.Color)))
+            {
+                _promotingPieceId = piece.Id;
+            }
+        }
+    }
+
+    public void OnPiecePromoted(ChessPiece piece)
+    {
+        _promotingPieceId = null;
     }
 }

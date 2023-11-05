@@ -9,10 +9,18 @@ public class ChessBoard
 {
     private readonly Dictionary<int, ChessPiece> _pieces = new();
 
+    public ChessBoard(ChessGameState gameState)
+    {
+        PieceMoved += gameState.OnPieceMoved;
+        PiecePromoted += gameState.OnPiecePromoted;
+    }
+
     public int IdPool { get; set; }
     public event Action<ChessPiece, Point, Point>? PieceMoved;
     public event Action<ChessPiece>? PieceAdded;
-    public event Action<ChessPiece>? PieceRemoved;
+    public event Action<ChessPiece>? PiecePromoted;
+    public event Action<ChessPiece>? PieceCaptured;
+    public event Action<ChessPiece>? PieceDeleted;
 
     public ChessPiece? GetPieceAt(Point position)
     {
@@ -35,28 +43,28 @@ public class ChessBoard
                 
         _pieces[id] = _pieces[id] with {Position = targetPosition, HasMoved = true};
         PieceMoved?.Invoke(_pieces[id], oldPosition, targetPosition);
-        
+
         if (currentOccupant.HasValue)
         {
-            DestroyPiece(currentOccupant.Value.Id);
+            CapturePiece(currentOccupant.Value.Id);
         }
 
     }
 
-    public void AddPiece(ChessPiece pieceTemplate)
+    public ChessPiece AddPiece(ChessPiece pieceTemplate)
     {
         var id = IdPool++;
         _pieces[id] = pieceTemplate with {Id = id};
         PieceAdded?.Invoke(_pieces[id]);
+        return _pieces[id];
     }
 
-    public void DestroyPiece(int id)
+    public void CapturePiece(int id)
     {
-        if (_pieces.ContainsKey(id))
+        if (_pieces.TryGetValue(id, out var piece))
         {
-            var piece = _pieces[id];
-            _pieces.Remove(id);
-            PieceRemoved?.Invoke(piece);
+            PieceCaptured?.Invoke(piece);
+            DeletePiece(id);
         }
         else
         {
@@ -77,5 +85,29 @@ public class ChessBoard
     public bool IsEmptySquare(Point position)
     {
         return Constants.IsWithinBoard(position) && GetPieceAt(position) == null;
+    }
+
+    public void Promote(int id, PieceType pieceType)
+    {
+        if (_pieces.TryGetValue(id, out var oldPiece))
+        {
+            DeletePiece(id);
+            var piece = AddPiece(oldPiece with {PieceType = pieceType});
+            PiecePromoted?.Invoke(piece);
+        }
+        else
+        {
+            Client.Debug.LogWarning($"Tried to promote {id} but it does not exist");
+        }
+    }
+
+    private void DeletePiece(int id)
+    {
+        if (_pieces.ContainsKey(id))
+        {
+            var oldPiece = _pieces[id];
+            _pieces.Remove(id);
+            PieceDeleted?.Invoke(oldPiece);
+        }
     }
 }

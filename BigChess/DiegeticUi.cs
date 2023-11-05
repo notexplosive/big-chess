@@ -11,14 +11,13 @@ namespace BigChess;
 public class DiegeticUi : IUpdateHook, IUpdateInputHook
 {
     private readonly Assets _assets;
-    private readonly ChessGameState _gameState;
     private readonly ChessBoard _board;
+    private readonly ChessGameState _gameState;
     private readonly Dictionary<int, PieceRenderer> _pieceRenderers = new();
-    private SelectedSquare? _selection;
-
     private readonly List<TargetSquare> _targetSquares = new();
+    private readonly SequenceTween _tween = new();
     private PieceRenderer? _draggedPiece;
-    private SequenceTween _tween = new();
+    private SelectedSquare? _selection;
 
     public DiegeticUi(UiState uiState, ChessBoard board, Assets assets, ChessGameState gameState)
     {
@@ -27,11 +26,33 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
         _gameState = gameState;
         uiState.SelectionChanged += SelectionChanged;
         _board.PieceAdded += OnPieceAdded;
-        _board.PieceRemoved += OnPieceRemoved;
+        _board.PieceCaptured += OnPieceCaptured;
+        _board.PieceDeleted += OnPieceDeleted;
         _board.PieceMoved += OnPieceMoved;
+        _board.PiecePromoted += OnPiecePromoted;
     }
 
     public AnimatedObjectCollection AnimatedObjects { get; } = new();
+
+    public void Update(float dt)
+    {
+        _tween.Update(dt);
+
+        if (_tween.IsDone())
+        {
+            _tween.Clear();
+        }
+
+        AnimatedObjects.UpdateAll(dt);
+    }
+
+    public void UpdateInput(ConsumableInput input, HitTestStack hitTestStack)
+    {
+        if (_draggedPiece != null)
+        {
+            _draggedPiece.Drag(input.Mouse.Position(hitTestStack.WorldMatrix) - new Vector2(Constants.TileSize) / 2f);
+        }
+    }
 
     public void Draw(Painter painter, Camera camera)
     {
@@ -44,27 +65,14 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
             painter.EndSpriteBatch();
         }
     }
-
-    public void Update(float dt)
-    {
-        _tween.Update(dt);
-
-        if (_tween.IsDone())
-        {
-            _tween.Clear();
-        }
-        
-        AnimatedObjects.UpdateAll(dt);
-    }
     
-    public void UpdateInput(ConsumableInput input, HitTestStack hitTestStack)
+    private void OnPiecePromoted(ChessPiece piece)
     {
-        if (_draggedPiece != null)
+        if (_pieceRenderers.TryGetValue(piece.Id, out var result))
         {
-            _draggedPiece.Drag(input.Mouse.Position(hitTestStack.WorldMatrix) - new Vector2(Constants.TileSize) / 2f);
+            result.AnimatePromote();
         }
     }
-    
 
     private void OnPieceMoved(ChessPiece piece, Point previousPosition, Point newPosition)
     {
@@ -74,11 +82,19 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
         }
     }
 
-    private void OnPieceRemoved(ChessPiece piece)
+    private void OnPieceCaptured(ChessPiece piece)
     {
         if (_pieceRenderers.TryGetValue(piece.Id, out var result))
         {
             result.FadeOut(_tween);
+        }
+    }
+    
+    private void OnPieceDeleted(ChessPiece piece)
+    {
+        if (_pieceRenderers.TryGetValue(piece.Id, out var result))
+        {
+            result.Delete();
         }
     }
 
@@ -148,6 +164,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
                 _draggedPiece.AnimateDropAt(_tween, piece.Value.Position);
             }
         }
+
         _draggedPiece = null;
     }
 }

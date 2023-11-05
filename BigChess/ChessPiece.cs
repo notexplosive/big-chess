@@ -65,14 +65,14 @@ public readonly record struct ChessPiece
         }
         else if (PieceType == PieceType.Pawn)
         {
-            var oneStep = Position + Forward(Color);
+            var oneStep = Position + Constants.Forward(Color);
             if (board.IsEmptySquare(oneStep))
             {
                 result.Add(oneStep);
 
                 if (!HasMoved)
                 {
-                    var twoStep = oneStep + Forward(Color);
+                    var twoStep = oneStep + Constants.Forward(Color);
                     if (board.IsEmptySquare(twoStep))
                     {
                         result.Add(twoStep);
@@ -80,8 +80,8 @@ public readonly record struct ChessPiece
                 }
             }
 
-            var aheadRight = Position + Forward(Color) + new Point(1, 0);
-            var aheadLeft = Position + Forward(Color) + new Point(-1, 0);
+            var aheadRight = Position + Constants.Forward(Color) + new Point(1, 0);
+            var aheadLeft = Position + Constants.Forward(Color) + new Point(-1, 0);
             AddIfEnemy(board, aheadLeft, result);
             AddIfEnemy(board, aheadRight, result);
         }
@@ -96,16 +96,6 @@ public readonly record struct ChessPiece
         {
             result.Add(position);
         }
-    }
-
-    private Point Forward(PieceColor color)
-    {
-        if (color == PieceColor.White)
-        {
-            return new Point(0, -1);
-        }
-
-        return new Point(0, 1);
     }
 
     private void Project(ChessBoard board, Point step, List<Point> result)
