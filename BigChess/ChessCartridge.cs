@@ -14,14 +14,14 @@ namespace BigChess;
 public class ChessCartridge : BasicGameCartridge, IHotReloadable
 {
     private readonly Assets _assets;
+    private readonly ChessBoard _board;
     private readonly Camera _camera;
     private readonly DiegeticUi _diegeticUi;
-    private readonly ChessBoard _board;
-    private readonly ChessInput _input;
-    private SpriteSheet _spriteSheet = null!;
-    private readonly UiState _uiState;
     private readonly ChessGameState _gameState;
+    private readonly ChessInput _input;
     private readonly PromotionUi _promotionUi;
+    private readonly UiState _uiState;
+    private SpriteSheet _spriteSheet = null!;
 
     public ChessCartridge(IRuntime runtime) : base(runtime)
     {
@@ -33,53 +33,52 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         _diegeticUi = new DiegeticUi(_uiState, _board, _assets, _gameState, _input);
         _promotionUi = new PromotionUi(_gameState, runtime, _assets, _board);
         _camera = new Camera(Constants.RenderResolution.ToRectangleF(), Constants.RenderResolution);
-        
 
         _board.AddPiece(new ChessPiece
             {Position = new Point(3, 1), PieceType = PieceType.Pawn, Color = PieceColor.White});
-        
+
         _board.AddPiece(new ChessPiece
             {Position = new Point(3, 3), PieceType = PieceType.Knight, Color = PieceColor.Black});
-        
+
         _board.AddPiece(new ChessPiece
             {Position = new Point(5, 4), PieceType = PieceType.Pawn, Color = PieceColor.Black});
-        
+
         _board.AddPiece(new ChessPiece
             {Position = new Point(7, 3), PieceType = PieceType.Pawn, Color = PieceColor.Black});
-        
+
         _board.AddPiece(new ChessPiece
             {Position = new Point(4, 5), PieceType = PieceType.Knight, Color = PieceColor.White});
-        
+
         _board.AddPiece(new ChessPiece
             {Position = new Point(6, 5), PieceType = PieceType.Knight, Color = PieceColor.Black});
-        
+
         _board.AddPiece(new ChessPiece
             {Position = new Point(10, 10), PieceType = PieceType.Bishop, Color = PieceColor.White});
-        
+
         _board.AddPiece(new ChessPiece
             {Position = new Point(15, 10), PieceType = PieceType.Rook, Color = PieceColor.White});
-        
+
         _board.AddPiece(new ChessPiece
             {Position = new Point(5, 10), PieceType = PieceType.Pawn, Color = PieceColor.White});
-        
+
         _board.AddPiece(new ChessPiece
             {Position = new Point(16, 11), PieceType = PieceType.Pawn, Color = PieceColor.White});
 
         _board.AddPiece(new ChessPiece
             {Position = new Point(16, 5), PieceType = PieceType.Queen, Color = PieceColor.White});
-        
+
         _board.AddPiece(new ChessPiece
             {Position = new Point(13, 4), PieceType = PieceType.King, Color = PieceColor.White});
-        
+
         _board.AddPiece(new ChessPiece
             {Position = new Point(13, 2), PieceType = PieceType.Rook, Color = PieceColor.White});
-        
+
         _board.AddPiece(new ChessPiece
             {Position = new Point(6, 4), PieceType = PieceType.Rook, Color = PieceColor.White});
-        
+
         _board.AddPiece(new ChessPiece
             {Position = new Point(20, 4), PieceType = PieceType.Rook, Color = PieceColor.White});
-        
+
         _board.AddPiece(new ChessPiece
             {Position = new Point(13, 10), PieceType = PieceType.Rook, Color = PieceColor.White});
 
@@ -89,19 +88,19 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         _input.DragCancelled += DragCancelled;
     }
 
-    private void DragCancelled()
-    {
-        _diegeticUi.ClearDrag();
-        _uiState.SelectedPiece = null;
-    }
-
     public override CartridgeConfig CartridgeConfig => new(Constants.RenderResolution, SamplerState.AnisotropicWrap);
 
     public void OnHotReload()
     {
         Client.Debug.Log("Hot Reloaded!");
     }
-    
+
+    private void DragCancelled()
+    {
+        _diegeticUi.ClearDrag();
+        _uiState.SelectedPiece = null;
+    }
+
     private void DragInitiated(Point position)
     {
         var piece = _board.GetPieceAt(position);
@@ -112,7 +111,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             _diegeticUi.BeginDrag(piece!.Value);
         }
     }
-    
+
     private void DragSucceeded(Point dragStart, Point position)
     {
         var move = GetSelectedPieceValidMoveTo(position);
@@ -151,7 +150,6 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
                 _uiState.SelectedPiece = null;
             }
         }
-            
     }
 
     private ChessMove? GetSelectedPieceValidMoveTo(Point position)
@@ -198,13 +196,13 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         var worldLayer = screenLayer.AddLayer(_camera.ScreenToCanvas, Depth.Middle);
         HandleCameraControls(input, worldLayer);
 
-        worldLayer.AddInfiniteZone(Depth.Back, ()=> _input.OnHoverVoid(input));
+        worldLayer.AddInfiniteZone(Depth.Back, () => _input.OnHoverVoid(input));
         foreach (var boardRectangle in Constants.BoardRectangles())
         {
             worldLayer.AddZone(boardRectangle.PixelRect, Depth.Middle,
                 () => { _input.SetHoveredSquare(input, boardRectangle.GridPosition); });
         }
-        
+
         _diegeticUi.UpdateInput(input, worldLayer);
         _promotionUi.UpdateInput(input, screenLayer);
     }
