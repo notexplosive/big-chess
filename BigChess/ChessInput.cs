@@ -10,6 +10,7 @@ public class ChessInput
     public Point? PrimedSquare { get; private set; }
 
     public event Action<Point, Point>? DragComplete;
+    public event Action? DragCancelled;
     public event Action<Point>? ClickedSquare;
     public event Action<Point>? DragInitiated;
 
@@ -36,7 +37,16 @@ public class ChessInput
                 DragComplete?.Invoke(PrimedSquare.Value, gridPosition);
             }
             
+            
             PrimedSquare = null;
+        }
+    }
+
+    public void OnHoverVoid(ConsumableInput input)
+    {
+        if (input.Mouse.GetButton(MouseButton.Left).WasReleased)
+        {
+            DragCancelled?.Invoke();
         }
     }
 }

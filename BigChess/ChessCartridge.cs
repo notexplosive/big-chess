@@ -42,6 +42,15 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             {Position = new Point(15, 10), PieceType = PieceType.Rook, Color = PieceColor.White});
 
         _input.ClickedSquare += ClickOnSquare;
+        _input.DragInitiated += DragInitiated;
+        _input.DragComplete += DragComplete;
+        _input.DragCancelled += DragCancelled;
+    }
+
+    private void DragCancelled()
+    {
+        _diegeticUI.ClearDrag();
+        _uiState.SelectedPiece = null;
     }
 
     public override CartridgeConfig CartridgeConfig => new(Constants.RenderResolution, SamplerState.AnisotropicWrap);
@@ -50,10 +59,41 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     {
         Client.Debug.Log("Hot Reloaded!");
     }
+    
+    private void DragInitiated(Point position)
+    {
+        var piece = _game.GetPieceAt(position);
+
+        if (piece.HasValue)
+        {
+            _uiState.SelectedPiece = piece;
+            _diegeticUI.BeginDrag(piece.Value);
+        }
+    }
+    
+    private void DragComplete(Point dragStart, Point position)
+    {
+        if (_uiState.SelectedPiece.HasValue && _uiState.SelectedPiece.Value.GetValidMoves(_game).Contains(position))
+        {
+            _game.MovePiece(_uiState.SelectedPiece.Value.Id, position);
+            _diegeticUI.DropDraggedPiece(position);
+            _uiState.SelectedPiece = null;
+        }
+        else
+        {
+            DragCancelled();
+        }
+    }
 
     private void ClickOnSquare(Point position)
     {
+        _diegeticUI.ClearDrag();
         var piece = _game.GetPieceAt(position);
+
+        if (piece == _uiState.SelectedPiece)
+        {
+            return;
+        }
 
         if (_uiState.SelectedPiece.HasValue && _uiState.SelectedPiece.Value.GetValidMoves(_game).Contains(position))
         {
@@ -77,11 +117,14 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         var layer = hitTestStack.AddLayer(_camera.ScreenToCanvas, Depth.Middle);
         HandleCameraControls(input, layer);
 
+        layer.AddInfiniteZone(Depth.Back, ()=> _input.OnHoverVoid(input));
         foreach (var boardRectangle in Constants.BoardRectangles())
         {
             layer.AddZone(boardRectangle.PixelRect, Depth.Middle,
                 () => { _input.OnHoverSquare(input, boardRectangle.GridPosition); });
         }
+        
+        _diegeticUI.UpdateInput(input, layer);
     }
 
     private void HandleCameraControls(ConsumableInput input, HitTestStack layer)

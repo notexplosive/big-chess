@@ -65,7 +65,7 @@ public class PieceRenderer : AnimatedObject
         return _fakePiecePosition;
     }
 
-    private ChessPiece? GetPiece()
+    public ChessPiece? GetPiece()
     {
         return _game.GetPieceFromId(_pieceId);
     }
@@ -76,12 +76,6 @@ public class PieceRenderer : AnimatedObject
 
         if (_tween.IsDone())
         {
-            var piece = GetPiece();
-            if (piece.HasValue)
-            {
-                _fakePiecePosition.Value = GetPiecePosition();
-            }
-
             _tween.Clear();
         }
     }
@@ -90,7 +84,8 @@ public class PieceRenderer : AnimatedObject
     {
         _tween.Add(new CallbackTween(() => { _isDrawingPieceExactly = false; }));
 
-        var duration = (previousPosition.ToVector2() - newPosition.ToVector2()).Length() / 20f;
+        var duration =
+            ((_fakePiecePosition.Value - Constants.ToWorldPosition(newPosition) + new Vector2(Constants.TileSize / 2f)) / Constants.TileSize).Length() / 20f;
         _tween.Add(
             new DynamicTween(() =>
             {
@@ -111,5 +106,31 @@ public class PieceRenderer : AnimatedObject
             }))
             ;
         _tween.Add(new CallbackTween(() => { _isDrawingPieceExactly = true; }));
+    }
+
+    public void AnimateDropAt(Point destination)
+    {
+        _tween.Add(new CallbackTween(() => { _isDrawingPieceExactly = false; }));
+
+        var duration = 0.15f;
+        _tween.Add(
+            new MultiplexTween()
+                .AddChannel(_fakePiecePosition.TweenTo(Constants.ToWorldPosition(destination), duration / 4f, Ease.Linear))
+                .AddChannel(
+                    new SequenceTween()
+                        .Add(_scale.TweenTo(0.9f, duration, Ease.QuadSlowFast))
+                        .Add(_scale.TweenTo(1f, duration, Ease.QuadSlowFast))
+                    
+                    )
+            );
+
+        _tween.Add(new CallbackTween(() => { _isDrawingPieceExactly = true; }));
+    }
+
+    public void Drag(Vector2 position)
+    {
+        _isDrawingPieceExactly = false;
+        _fakePiecePosition.Value = position;
+        _scale.Value = 1.2f;
     }
 }

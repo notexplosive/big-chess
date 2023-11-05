@@ -12,7 +12,7 @@ public class MoveSquare : TargetSquare
     private readonly TweenableFloat _scale = new(0.9f);
     private readonly TweenableFloat _opacity = new(0);
 
-    public MoveSquare(Point startingPosition, Point landingPosition, float delay) : base(landingPosition)
+    public MoveSquare(Point landingPosition, float delay) : base(landingPosition)
     {
         var duration = 0.5f;
         Tween
@@ -21,8 +21,8 @@ public class MoveSquare : TargetSquare
                 new MultiplexTween()
                     .AddChannel(
                         new SequenceTween()
-                            .Add(_scale.TweenTo(0.7f, duration * 0.75f, Ease.CubicSlowFast))
-                            .Add(_scale.TweenTo(0.8f, duration * 0.25f, Ease.CubicFastSlow))
+                            .Add(_scale.TweenTo(0.4f, duration * 0.75f, Ease.CubicSlowFast))
+                            .Add(_scale.TweenTo(0.5f, duration * 0.25f, Ease.CubicFastSlow))
                     )
                     .AddChannel(_opacity.TweenTo(1, duration/2f, Ease.Linear))
             );
