@@ -70,11 +70,22 @@ public static class Constants
 
     public static bool IsWithinBoard(Point position)
     {
-        return position.X >= 0 && position.Y >= 0 && position.X < BoardLength && position.Y < BoardLength;
+        return position.X >= 0 && position.Y >= 0 && position.X < Constants.BoardLength &&
+               position.Y < Constants.BoardLength;
     }
 
     public static Vector2 ToWorldPosition(Point gridPosition)
     {
         return gridPosition.ToVector2() * Constants.TileSize;
+    }
+
+    public static PieceColor FlipColor(PieceColor color)
+    {
+        return color switch
+        {
+            PieceColor.White => PieceColor.Black,
+            PieceColor.Black => PieceColor.White,
+            _ => color
+        };
     }
 }

@@ -7,6 +7,13 @@ namespace BigChess;
 
 public class ChessInput
 {
+    private readonly ChessGameState _gameState;
+
+    public ChessInput(ChessGameState gameState)
+    {
+        _gameState = gameState;
+    }
+
     public Point? PrimedSquare { get; private set; }
 
     public event Action<Point, Point>? DragComplete;
@@ -16,6 +23,11 @@ public class ChessInput
 
     public void OnHoverSquare(ConsumableInput input, Point gridPosition)
     {
+        if (!_gameState.PlayerCanInput)
+        {
+            return;
+        }
+        
         if (input.Mouse.GetButton(MouseButton.Left).WasPressed)
         {
             input.Mouse.Consume(MouseButton.Left);

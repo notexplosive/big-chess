@@ -10,6 +10,7 @@ namespace BigChess;
 public class DiegeticUi : IUpdateHook, IUpdateInputHook
 {
     private readonly Assets _assets;
+    private readonly ChessGameState _gameState;
     private readonly ChessBoard _board;
     private readonly Dictionary<int, PieceRenderer> _pieceRenderers = new();
     private SelectedSquare? _selection;
@@ -17,10 +18,11 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     private readonly List<TargetSquare> _targetSquares = new();
     private PieceRenderer? _draggedPiece;
 
-    public DiegeticUi(UiState uiState, ChessBoard board, Assets assets)
+    public DiegeticUi(UiState uiState, ChessBoard board, Assets assets, ChessGameState gameState)
     {
         _board = board;
         _assets = assets;
+        _gameState = gameState;
         uiState.SelectionChanged += SelectionChanged;
         _board.PieceAdded += OnPieceAdded;
         _board.PieceRemoved += OnPieceRemoved;
@@ -59,7 +61,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     {
         if (_pieceRenderers.TryGetValue(piece.Id, out var result))
         {
-            result.AnimateMove(piece, previousPosition, newPosition);
+            result.AnimateMove(piece, newPosition, _gameState);
         }
     }
 
@@ -67,13 +69,13 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     {
         if (_pieceRenderers.TryGetValue(piece.Id, out var result))
         {
-            result.Destroy();
+            result.FadeOut();
         }
     }
 
     private void OnPieceAdded(ChessPiece piece)
     {
-        _pieceRenderers.Add(piece.Id, AnimatedObjects.Add(new PieceRenderer(piece.Id, _board, _assets)));
+        _pieceRenderers.Add(piece.Id, AnimatedObjects.Add(new PieceRenderer(piece, _board, _assets)));
     }
 
     private void SelectionChanged(ChessPiece? piece)

@@ -27,11 +27,19 @@ public class ChessBoard
         return null;
     }
 
-    public void MovePiece(int id, Point position)
+    public void MovePiece(int id, Point targetPosition)
     {
         var oldPosition = _pieces[id].Position;
-        _pieces[id] = _pieces[id] with {Position = position};
-        PieceMoved?.Invoke(_pieces[id], oldPosition, position);
+
+        var currentOccupant = GetPieceAt(targetPosition);
+
+        if (currentOccupant.HasValue)
+        {
+            DestroyPiece(currentOccupant.Value.Id);
+        }
+        
+        _pieces[id] = _pieces[id] with {Position = targetPosition};
+        PieceMoved?.Invoke(_pieces[id], oldPosition, targetPosition);
     }
 
     public void AddPiece(ChessPiece pieceTemplate)
