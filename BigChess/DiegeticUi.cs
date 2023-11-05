@@ -10,21 +10,21 @@ namespace BigChess;
 public class DiegeticUi : IUpdateHook, IUpdateInputHook
 {
     private readonly Assets _assets;
-    private readonly ChessGame _game;
+    private readonly ChessBoard _board;
     private readonly Dictionary<int, PieceRenderer> _pieceRenderers = new();
     private SelectedSquare? _selection;
 
     private readonly List<TargetSquare> _targetSquares = new();
     private PieceRenderer? _draggedPiece;
 
-    public DiegeticUi(UiState uiState, ChessGame game, Assets assets)
+    public DiegeticUi(UiState uiState, ChessBoard board, Assets assets)
     {
-        _game = game;
+        _board = board;
         _assets = assets;
         uiState.SelectionChanged += SelectionChanged;
-        _game.PieceAdded += OnPieceAdded;
-        _game.PieceRemoved += OnPieceRemoved;
-        _game.PieceMoved += OnPieceMoved;
+        _board.PieceAdded += OnPieceAdded;
+        _board.PieceRemoved += OnPieceRemoved;
+        _board.PieceMoved += OnPieceMoved;
     }
 
     public AnimatedObjectCollection AnimatedObjects { get; } = new();
@@ -73,7 +73,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
 
     private void OnPieceAdded(ChessPiece piece)
     {
-        _pieceRenderers.Add(piece.Id, AnimatedObjects.Add(new PieceRenderer(piece.Id, _game, _assets)));
+        _pieceRenderers.Add(piece.Id, AnimatedObjects.Add(new PieceRenderer(piece.Id, _board, _assets)));
     }
 
     private void SelectionChanged(ChessPiece? piece)
@@ -85,9 +85,9 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
             var startingPosition = piece.Value.Position;
             _selection = AnimatedObjects.Add(new SelectedSquare(startingPosition));
 
-            foreach (var landingPosition in piece.Value.GetValidMoves(_game))
+            foreach (var landingPosition in piece.Value.GetValidMoves(_board))
             {
-                if (_game.GetPieceAt(landingPosition) != null)
+                if (_board.GetPieceAt(landingPosition) != null)
                 {
                     _targetSquares.Add(AnimatedObjects.Add(new AttackSquare(startingPosition, landingPosition)));
                 }

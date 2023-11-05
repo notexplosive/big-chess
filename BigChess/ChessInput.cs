@@ -37,7 +37,6 @@ public class ChessInput
                 DragComplete?.Invoke(PrimedSquare.Value, gridPosition);
             }
             
-            
             PrimedSquare = null;
         }
     }

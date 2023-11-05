@@ -16,7 +16,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     private readonly Assets _assets;
     private readonly Camera _camera;
     private readonly DiegeticUi _diegeticUI;
-    private readonly ChessGame _game;
+    private readonly ChessBoard _board;
     private readonly ChessInput _input;
     private SpriteSheet _spriteSheet = null!;
     private readonly UiState _uiState;
@@ -25,20 +25,20 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     {
         _assets = new Assets();
         _input = new ChessInput();
-        _game = new ChessGame();
+        _board = new ChessBoard();
         _uiState = new UiState();
-        _diegeticUI = new DiegeticUi(_uiState, _game, _assets);
+        _diegeticUI = new DiegeticUi(_uiState, _board, _assets);
         _camera = new Camera(Constants.RenderResolution.ToRectangleF(), Constants.RenderResolution);
 
-        _game.AddPiece(new ChessPiece
+        _board.AddPiece(new ChessPiece
             {Position = new Point(3, 3), PieceType = PieceType.Knight, Color = PieceColor.Black});
-        _game.AddPiece(new ChessPiece
+        _board.AddPiece(new ChessPiece
             {Position = new Point(4, 5), PieceType = PieceType.Knight, Color = PieceColor.White});
         
-        _game.AddPiece(new ChessPiece
+        _board.AddPiece(new ChessPiece
             {Position = new Point(10, 10), PieceType = PieceType.Bishop, Color = PieceColor.White});
         
-        _game.AddPiece(new ChessPiece
+        _board.AddPiece(new ChessPiece
             {Position = new Point(15, 10), PieceType = PieceType.Rook, Color = PieceColor.White});
 
         _input.ClickedSquare += ClickOnSquare;
@@ -62,7 +62,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     
     private void DragInitiated(Point position)
     {
-        var piece = _game.GetPieceAt(position);
+        var piece = _board.GetPieceAt(position);
 
         if (piece.HasValue)
         {
@@ -73,9 +73,9 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     
     private void DragComplete(Point dragStart, Point position)
     {
-        if (_uiState.SelectedPiece.HasValue && _uiState.SelectedPiece.Value.GetValidMoves(_game).Contains(position))
+        if (_uiState.SelectedPiece.HasValue && _uiState.SelectedPiece.Value.GetValidMoves(_board).Contains(position))
         {
-            _game.MovePiece(_uiState.SelectedPiece.Value.Id, position);
+            _board.MovePiece(_uiState.SelectedPiece.Value.Id, position);
             _diegeticUI.DropDraggedPiece(position);
             _uiState.SelectedPiece = null;
         }
@@ -88,16 +88,16 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     private void ClickOnSquare(Point position)
     {
         _diegeticUI.ClearDrag();
-        var piece = _game.GetPieceAt(position);
+        var piece = _board.GetPieceAt(position);
 
         if (piece == _uiState.SelectedPiece)
         {
             return;
         }
 
-        if (_uiState.SelectedPiece.HasValue && _uiState.SelectedPiece.Value.GetValidMoves(_game).Contains(position))
+        if (_uiState.SelectedPiece.HasValue && _uiState.SelectedPiece.Value.GetValidMoves(_board).Contains(position))
         {
-            _game.MovePiece(_uiState.SelectedPiece.Value.Id, position);
+            _board.MovePiece(_uiState.SelectedPiece.Value.Id, position);
             _uiState.SelectedPiece = null;
         }
         else

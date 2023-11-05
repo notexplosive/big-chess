@@ -14,15 +14,15 @@ public class PieceRenderer : AnimatedObject
     private readonly Assets _assets;
     private readonly TweenableVector2 _fakePiecePosition = new();
     private readonly TweenableFloat _scale = new(1f);
-    private readonly ChessGame _game;
+    private readonly ChessBoard _board;
     private readonly int _pieceId;
     private readonly SequenceTween _tween = new();
     private bool _isDrawingPieceExactly = true;
 
-    public PieceRenderer(int pieceId, ChessGame game, Assets assets)
+    public PieceRenderer(int pieceId, ChessBoard board, Assets assets)
     {
         _pieceId = pieceId;
-        _game = game;
+        _board = board;
         _assets = assets;
     }
 
@@ -67,7 +67,7 @@ public class PieceRenderer : AnimatedObject
 
     public ChessPiece? GetPiece()
     {
-        return _game.GetPieceFromId(_pieceId);
+        return _board.GetPieceFromId(_pieceId);
     }
 
     public override void Update(float dt)

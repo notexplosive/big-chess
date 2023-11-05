@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 
 namespace BigChess;
 
-public class ChessGame
+public class ChessBoard
 {
     private readonly Dictionary<int, ChessPiece> _pieces = new();
 
