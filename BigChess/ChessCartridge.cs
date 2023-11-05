@@ -30,7 +30,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         _input = new ChessInput(_gameState);
         _board = new ChessBoard(_gameState);
         _uiState = new UiState();
-        _diegeticUi = new DiegeticUi(_uiState, _board, _assets, _gameState);
+        _diegeticUi = new DiegeticUi(_uiState, _board, _assets, _gameState, _input);
         _promotionUi = new PromotionUi(_gameState, runtime, _assets, _board);
         _camera = new Camera(Constants.RenderResolution.ToRectangleF(), Constants.RenderResolution);
         
@@ -71,9 +71,9 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         _board.AddPiece(new ChessPiece
             {Position = new Point(13, 4), PieceType = PieceType.King, Color = PieceColor.White});
 
-        _input.ClickedSquare += ClickOnSquare;
+        _input.SquareClicked += ClickOn;
         _input.DragInitiated += DragInitiated;
-        _input.DragComplete += DragComplete;
+        _input.DragSucceeded += DragSucceeded;
         _input.DragCancelled += DragCancelled;
     }
 
@@ -101,7 +101,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         }
     }
     
-    private void DragComplete(Point dragStart, Point position)
+    private void DragSucceeded(Point dragStart, Point position)
     {
         if (SelectedPieceCanMoveTo(position))
         {
@@ -115,7 +115,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         }
     }
 
-    private void ClickOnSquare(Point position)
+    private void ClickOn(Point position)
     {
         _diegeticUi.ClearDrag();
         var piece = _board.GetPieceAt(position);
@@ -175,7 +175,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         foreach (var boardRectangle in Constants.BoardRectangles())
         {
             worldLayer.AddZone(boardRectangle.PixelRect, Depth.Middle,
-                () => { _input.OnHoverSquare(input, boardRectangle.GridPosition); });
+                () => { _input.SetHoveredSquare(input, boardRectangle.GridPosition); });
         }
         
         _diegeticUi.UpdateInput(input, worldLayer);

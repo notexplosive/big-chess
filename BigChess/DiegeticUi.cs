@@ -13,23 +13,30 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     private readonly Assets _assets;
     private readonly ChessBoard _board;
     private readonly ChessGameState _gameState;
+    private readonly ChessInput _chessInput;
     private readonly Dictionary<int, PieceRenderer> _pieceRenderers = new();
     private readonly List<TargetSquare> _targetSquares = new();
     private readonly SequenceTween _tween = new();
     private PieceRenderer? _draggedPiece;
     private SelectedSquare? _selection;
+    private ProposedMoveSquare _proposedMoveSquare;
 
-    public DiegeticUi(UiState uiState, ChessBoard board, Assets assets, ChessGameState gameState)
+    public DiegeticUi(UiState uiState, ChessBoard board, Assets assets, ChessGameState gameState, ChessInput chessInput)
     {
+        _proposedMoveSquare = AnimatedObjects.Add(new ProposedMoveSquare());
+        
         _board = board;
         _assets = assets;
         _gameState = gameState;
+        _chessInput = chessInput;
         uiState.SelectionChanged += SelectionChanged;
         _board.PieceAdded += OnPieceAdded;
         _board.PieceCaptured += OnPieceCaptured;
         _board.PieceDeleted += OnPieceDeleted;
         _board.PieceMoved += OnPieceMoved;
         _board.PiecePromoted += OnPiecePromoted;
+        _chessInput.SquareHovered += OnSquareHovered;
+        _chessInput.DragFinished += OnDragFinished;
     }
 
     public AnimatedObjectCollection AnimatedObjects { get; } = new();
@@ -63,6 +70,19 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
             painter.BeginSpriteBatch(camera.CanvasToScreen);
             _draggedPiece.DrawScaled(painter);
             painter.EndSpriteBatch();
+        }
+    }
+    
+    private void OnSquareHovered(Point position)
+    {
+        if (_draggedPiece != null)
+        {
+            _proposedMoveSquare.Visible = true;
+            _proposedMoveSquare.MoveTo(position);
+        }
+        else
+        {
+            _proposedMoveSquare.Visible = false;
         }
     }
     
@@ -142,6 +162,11 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     public void BeginDrag(ChessPiece piece)
     {
         _draggedPiece = _pieceRenderers[piece.Id];
+    }
+    
+    private void OnDragFinished()
+    {
+        _proposedMoveSquare.Visible = false;
     }
 
     public void DropDraggedPiece(Point destination)

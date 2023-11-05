@@ -8,6 +8,8 @@ namespace BigChess;
 public class ChessInput
 {
     private readonly ChessGameState _gameState;
+    private Point? _hoveredSquare;
+    private bool _isDragging;
 
     public ChessInput(ChessGameState gameState)
     {
@@ -16,13 +18,21 @@ public class ChessInput
 
     public Point? PrimedSquare { get; private set; }
 
-    public event Action<Point, Point>? DragComplete;
+    public event Action<Point, Point>? DragSucceeded;
     public event Action? DragCancelled;
-    public event Action<Point>? ClickedSquare;
+    public event Action? DragFinished;
+    public event Action<Point>? SquareClicked;
+    public event Action<Point>? SquareHovered;
     public event Action<Point>? DragInitiated;
 
-    public void OnHoverSquare(ConsumableInput input, Point gridPosition)
+    public void SetHoveredSquare(ConsumableInput input, Point gridPosition)
     {
+        if (_hoveredSquare != gridPosition)
+        {
+            SquareHovered?.Invoke(gridPosition);
+            _hoveredSquare = gridPosition;
+        }
+
         if (!_gameState.PlayerCanMovePieces)
         {
             return;
@@ -32,6 +42,7 @@ public class ChessInput
         {
             input.Mouse.Consume(MouseButton.Left);
             PrimedSquare = gridPosition;
+            _isDragging = true;
 
             DragInitiated?.Invoke(gridPosition);
         }
@@ -42,22 +53,28 @@ public class ChessInput
             
             if (PrimedSquare == gridPosition)
             {
-                ClickedSquare?.Invoke(gridPosition);
+                SquareClicked?.Invoke(gridPosition);
             }
             else if(PrimedSquare.HasValue)
             {
-                DragComplete?.Invoke(PrimedSquare.Value, gridPosition);
+                DragSucceeded?.Invoke(PrimedSquare.Value, gridPosition);
             }
-            
+
+            if (_isDragging)
+            {
+                DragFinished?.Invoke();
+            }
+
             PrimedSquare = null;
         }
     }
 
     public void OnHoverVoid(ConsumableInput input)
     {
-        if (input.Mouse.GetButton(MouseButton.Left).WasReleased)
+        if (input.Mouse.GetButton(MouseButton.Left).WasReleased && _isDragging)
         {
             DragCancelled?.Invoke();
+            DragFinished?.Invoke();
         }
     }
 }
