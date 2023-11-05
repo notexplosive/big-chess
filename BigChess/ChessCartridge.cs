@@ -21,7 +21,6 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     private readonly ChessInput _input;
     private readonly PromotionUi _promotionUi;
     private readonly UiState _uiState;
-    private SpriteSheet _spriteSheet = null!;
 
     public ChessCartridge(IRuntime runtime) : base(runtime)
     {
@@ -188,7 +187,6 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
 
     public override void OnCartridgeStarted()
     {
-        _spriteSheet = _assets.GetAsset<SpriteSheet>("Pieces");
     }
 
     public override void UpdateInput(ConsumableInput input, HitTestStack screenLayer)
