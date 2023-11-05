@@ -27,35 +27,44 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         _input = new ChessInput();
         _game = new ChessGame();
         _uiState = new UiState();
-        _diegeticUI = new DiegeticUi(_uiState);
+        _diegeticUI = new DiegeticUi(_uiState, _game, _assets);
         _camera = new Camera(Constants.RenderResolution.ToRectangleF(), Constants.RenderResolution);
 
-        _game.Pieces.Add(new ChessPiece
+        _game.AddPiece(new ChessPiece
             {Position = new Point(3, 3), PieceType = PieceType.Knight, Color = PieceColor.Black});
-        _game.Pieces.Add(new ChessPiece
-            {Position = new Point(3, 5), PieceType = PieceType.Knight, Color = PieceColor.White});
+        _game.AddPiece(new ChessPiece
+            {Position = new Point(4, 5), PieceType = PieceType.Knight, Color = PieceColor.White});
+        
+        _game.AddPiece(new ChessPiece
+            {Position = new Point(10, 10), PieceType = PieceType.Bishop, Color = PieceColor.White});
+        
+        _game.AddPiece(new ChessPiece
+            {Position = new Point(15, 10), PieceType = PieceType.Rook, Color = PieceColor.White});
 
-        _input.ClickedSquare += TrySelectPieceAt;
+        _input.ClickedSquare += ClickOnSquare;
     }
 
-    public override CartridgeConfig CartridgeConfig => new(Constants.RenderResolution);
+    public override CartridgeConfig CartridgeConfig => new(Constants.RenderResolution, SamplerState.AnisotropicWrap);
 
     public void OnHotReload()
     {
         Client.Debug.Log("Hot Reloaded!");
     }
 
-    private void TrySelectPieceAt(Point position)
+    private void ClickOnSquare(Point position)
     {
         var piece = _game.GetPieceAt(position);
-        if (piece != null)
+
+        if (_uiState.SelectedPiece.HasValue && _uiState.SelectedPiece.Value.GetValidMoves(_game).Contains(position))
         {
-            _uiState.SelectedPiece = piece;
+            _game.MovePiece(_uiState.SelectedPiece.Value.Id, position);
+            _uiState.SelectedPiece = null;
         }
         else
         {
-            _uiState.SelectedPiece = null;
+            _uiState.SelectedPiece = piece ?? null;
         }
+            
     }
 
     public override void OnCartridgeStarted()
@@ -119,12 +128,6 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             }
 
             painter.DrawRectangle(rectangle.PixelRect, new DrawSettings {Color = color, Depth = Depth.Back});
-        }
-
-        foreach (var piece in _game.Pieces)
-        {
-            _spriteSheet.DrawFrameAsRectangle(painter, Constants.FrameIndex(piece.PieceType, piece.Color),
-                piece.PixelRectangle, new DrawSettings {Depth = Depth.Middle});
         }
 
         _diegeticUI.Draw(painter);

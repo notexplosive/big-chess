@@ -4,7 +4,11 @@ namespace BigChess;
 
 public class UiState
 {
-    public ChessPiece? SelectedPiece { get => _selectedPiece;
+    private ChessPiece? _selectedPiece;
+
+    public ChessPiece? SelectedPiece
+    {
+        get => _selectedPiece;
         set
         {
             _selectedPiece = value;
@@ -13,6 +17,4 @@ public class UiState
     }
 
     public event Action<ChessPiece?>? SelectionChanged;
-
-    private ChessPiece? _selectedPiece;
 }

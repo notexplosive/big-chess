@@ -67,4 +67,14 @@ public static class Constants
 
         return 0;
     }
+
+    public static bool IsWithinBoard(Point position)
+    {
+        return position.X >= 0 && position.Y >= 0 && position.X < BoardLength && position.Y < BoardLength;
+    }
+
+    public static Vector2 ToWorldPosition(Point gridPosition)
+    {
+        return gridPosition.ToVector2() * Constants.TileSize;
+    }
 }
