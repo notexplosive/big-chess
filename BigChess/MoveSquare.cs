@@ -8,26 +8,41 @@ namespace BigChess;
 
 public class MoveSquare : TargetSquare
 {
-    private readonly TweenableFloat _expandAmount = new();
-    private readonly TweenableFloat _thickness = new(0);
-    private readonly TweenableFloat _opacity = new(1);
-    
-    public MoveSquare(Point startingPosition, Point landingPosition) : base(landingPosition)
+    private readonly TweenableFloat _thickness = new(3);
+    private readonly TweenableFloat _scale = new(0.9f);
+    private readonly TweenableFloat _opacity = new(0);
+
+    public MoveSquare(Point startingPosition, Point landingPosition, float delay) : base(landingPosition)
     {
+        var duration = 0.5f;
         Tween
-            .Add(new WaitSecondsTween((startingPosition.ToVector2() - landingPosition.ToVector2()).Length() / 40f))
+            .Add(new WaitSecondsTween(delay))
             .Add(
                 new MultiplexTween()
-                    .AddChannel(_expandAmount.TweenTo(-Constants.TileSize / 8f, 0.25f, Ease.CubicSlowFast))
-                    .AddChannel(_thickness.TweenTo(4, 0.25f, Ease.Linear))
-                    .AddChannel(_opacity.TweenTo(1, 0.25f, Ease.Linear))
-            )
-            .Add(_expandAmount.TweenTo(-Constants.TileSize / 16f, 0.25f, Ease.CubicFastSlow));
+                    .AddChannel(
+                        new SequenceTween()
+                            .Add(_scale.TweenTo(0.7f, duration * 0.75f, Ease.CubicSlowFast))
+                            .Add(_scale.TweenTo(0.8f, duration * 0.25f, Ease.CubicFastSlow))
+                    )
+                    .AddChannel(_opacity.TweenTo(1, duration/2f, Ease.Linear))
+            );
+
     }
 
-    public override void Draw(Painter painter)
+    public override void DrawScaled(Painter painter)
     {
-        var rectangle = Constants.PixelRectangle(Position).Inflated(_expandAmount, _expandAmount);
-        painter.DrawLineRectangle(rectangle, new LineDrawSettings {Depth = Depth.Back - 100, Thickness = _thickness, Color = Color.Orange.WithMultipliedOpacity(_opacity)});
+    }
+
+    public override void DrawUnscaled(Painter painter, Camera camera)
+    {
+        var rectangle = RectangleF.InflateFrom(Constants.ToWorldPosition(Position) + new Vector2(Constants.TileSize / 2f), _scale * Constants.TileSize / 2f,
+            _scale * Constants.TileSize / 2f);
+        var transformedRectangle = RectangleF.Transform(rectangle, camera.CanvasToScreen);
+
+        painter.DrawLineRectangle(transformedRectangle,
+            new LineDrawSettings
+            {
+                Depth = Depth.Back - 100, Thickness = _thickness, Color = Color.Orange.WithMultipliedOpacity(_opacity)
+            });
     }
 }

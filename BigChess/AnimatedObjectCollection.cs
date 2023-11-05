@@ -30,11 +30,28 @@ public class AnimatedObjectCollection
         }
     }
 
-    public void DrawAll(Painter painter)
+    public void DrawAll(Painter painter, Camera camera)
     {
+        painter.BeginSpriteBatch(camera.CanvasToScreen);
         foreach (var item in _content)
         {
-            item.Draw(painter);
+            if (item.Visible)
+            {
+                item.DrawScaled(painter);
+            }
         }
+
+        painter.EndSpriteBatch();
+
+        painter.BeginSpriteBatch();
+        foreach (var item in _content)
+        {
+            if (item.Visible)
+            {
+                item.DrawUnscaled(painter, camera);
+            }
+        }
+
+        painter.EndSpriteBatch();
     }
 }

@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 
 namespace BigChess;
 
-public class DiegeticUi : IDrawHook, IUpdateHook
+public class DiegeticUi : IUpdateHook
 {
     private readonly Assets _assets;
     private readonly ChessGame _game;
@@ -27,9 +27,9 @@ public class DiegeticUi : IDrawHook, IUpdateHook
 
     public AnimatedObjectCollection AnimatedObjects { get; } = new();
 
-    public void Draw(Painter painter)
+    public void Draw(Painter painter, Camera camera)
     {
-        AnimatedObjects.DrawAll(painter);
+        AnimatedObjects.DrawAll(painter, camera);
     }
 
     public void Update(float dt)
@@ -64,18 +64,20 @@ public class DiegeticUi : IDrawHook, IUpdateHook
 
         if (piece.HasValue)
         {
-            _selection = AnimatedObjects.Add(new SelectedSquare(piece.Value.Position));
+            var startingPosition = piece.Value.Position;
+            _selection = AnimatedObjects.Add(new SelectedSquare(startingPosition));
 
             foreach (var landingPosition in piece.Value.GetValidMoves(_game))
             {
                 if (_game.GetPieceAt(landingPosition) != null)
                 {
-                    _targetSquares.Add(AnimatedObjects.Add(new AttackSquare(piece.Value.Position, landingPosition)));
+                    _targetSquares.Add(AnimatedObjects.Add(new AttackSquare(startingPosition, landingPosition)));
                 }
 
                 if (Constants.IsWithinBoard(landingPosition))
                 {
-                    _targetSquares.Add(AnimatedObjects.Add(new MoveSquare(piece.Value.Position, landingPosition)));
+                    var delay = (startingPosition.ToVector2() - landingPosition.ToVector2()).Length() / 100f;
+                    _targetSquares.Add(AnimatedObjects.Add(new MoveSquare(startingPosition, landingPosition, delay)));
                 }
             }
         }

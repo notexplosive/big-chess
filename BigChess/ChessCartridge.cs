@@ -93,15 +93,16 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
 
         var scrollDelta = input.Mouse.ScrollDelta(true);
 
+        var zoomAmount = 60;
         if (scrollDelta > 0 && _camera.ViewBounds.Height > Constants.TileSize * 8)
         {
-            _camera.ViewBounds = _camera.ViewBounds.GetZoomedInBounds(30,
+            _camera.ViewBounds = _camera.ViewBounds.GetZoomedInBounds(zoomAmount,
                 input.Mouse.Position(layer.WorldMatrix));
         }
 
         if (scrollDelta < 0)
         {
-            _camera.ViewBounds = _camera.ViewBounds.GetZoomedOutBounds(30,
+            _camera.ViewBounds = _camera.ViewBounds.GetZoomedOutBounds(zoomAmount,
                 input.Mouse.Position(layer.WorldMatrix));
         }
 
@@ -116,8 +117,13 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
 
     public override void Draw(Painter painter)
     {
-        painter.BeginSpriteBatch(_camera.CanvasToScreen);
+        DrawBoard(painter);
+        _diegeticUI.Draw(painter, _camera);
+    }
 
+    private void DrawBoard(Painter painter)
+    {
+        painter.BeginSpriteBatch(_camera.CanvasToScreen);
         foreach (var rectangle in Constants.BoardRectangles())
         {
             var color = Color.Green.DesaturatedBy(0.45f);
@@ -129,8 +135,6 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
 
             painter.DrawRectangle(rectangle.PixelRect, new DrawSettings {Color = color, Depth = Depth.Back});
         }
-
-        _diegeticUI.Draw(painter);
 
         painter.EndSpriteBatch();
     }

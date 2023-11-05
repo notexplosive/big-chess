@@ -26,10 +26,15 @@ public class SelectedSquare : AnimatedObject
         _tween.IsLooping = true;
     }
 
-    public override void Draw(Painter painter)
+    public override void DrawScaled(Painter painter)
+    {
+        
+    }
+
+    public override void DrawUnscaled(Painter painter, Camera camera)
     {
         var rectangle = Constants.PixelRectangle(_position).Inflated(_expandAmount, _expandAmount);
-        painter.DrawLineRectangle(rectangle, new LineDrawSettings {Depth = Depth.Front + 100, Thickness = _thickness, Color = Color.LightBlue.WithMultipliedOpacity(_opacity)});
+        painter.DrawLineRectangle(RectangleF.Transform(rectangle, camera.CanvasToScreen), new LineDrawSettings {Depth = Depth.Front + 100, Thickness = _thickness, Color = Color.LightBlue.WithMultipliedOpacity(_opacity)});
     }
 
     public override void Update(float dt)

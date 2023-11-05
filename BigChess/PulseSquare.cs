@@ -24,10 +24,15 @@ public class PulseSquare : AnimatedObject
             .Add(new CallbackTween(() => { Destroy(); }));
     }
     
-    public override void Draw(Painter painter)
+    public override void DrawScaled(Painter painter)
     {
         var rectangle = Constants.PixelRectangle(_position).Inflated(_expandAmount, _expandAmount);
         painter.DrawLineRectangle(rectangle, new LineDrawSettings {Thickness = _thickness, Color = Color.Goldenrod});
+    }
+
+    public override void DrawUnscaled(Painter painter, Camera camera)
+    {
+        
     }
 
     public override void Update(float dt)

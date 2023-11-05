@@ -37,11 +37,14 @@ public class AttackSquare : TargetSquare
         Tween.IsLooping = true;
     }
 
-    public override void Draw(Painter painter)
+    public override void DrawScaled(Painter painter)
     {
         var rectangle = Constants.PixelRectangle(Position).Inflated(_expandAmount, _expandAmount);
-
         var shapeBounds = rectangle.Inflated(new Vector2(-Constants.TileSize * 0.15f));
         painter.DrawRectangle(shapeBounds.MovedByOrigin(DrawOrigin.Center), new DrawSettings {Color = Color.Red.WithMultipliedOpacity(_opacity), Angle = _angle + MathF.PI/4f, Origin = DrawOrigin.Center});
+    }
+
+    public override void DrawUnscaled(Painter painter, Camera camera)
+    {
     }
 }

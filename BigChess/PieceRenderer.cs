@@ -26,7 +26,7 @@ public class PieceRenderer : AnimatedObject
         _assets = assets;
     }
 
-    public override void Draw(Painter painter)
+    public override void DrawScaled(Painter painter)
     {
         var piece = GetPiece();
 
@@ -46,6 +46,10 @@ public class PieceRenderer : AnimatedObject
             _assets.GetAsset<SpriteSheet>("Pieces").DrawFrameAsRectangle(painter, frame, rectangle,
                 new DrawSettings {Depth = depth});
         }
+    }
+
+    public override void DrawUnscaled(Painter painter, Camera camera)
+    {
     }
 
     private Vector2 GetPiecePosition()
