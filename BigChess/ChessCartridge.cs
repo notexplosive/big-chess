@@ -34,6 +34,13 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
 
         _board.AddPiece(new ChessPiece
             {Position = new Point(3, 3), PieceType = PieceType.Knight, Color = PieceColor.Black});
+        
+        _board.AddPiece(new ChessPiece
+            {Position = new Point(5, 4), PieceType = PieceType.Pawn, Color = PieceColor.Black});
+        
+        _board.AddPiece(new ChessPiece
+            {Position = new Point(7, 3), PieceType = PieceType.Pawn, Color = PieceColor.Black});
+        
         _board.AddPiece(new ChessPiece
             {Position = new Point(4, 5), PieceType = PieceType.Knight, Color = PieceColor.White});
         
