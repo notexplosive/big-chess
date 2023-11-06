@@ -35,7 +35,7 @@ public class EditorPrompt : ButtonListPrompt
 
     private void Mirror(PieceColor color)
     {
-        var oppositeColor = Constants.FlipColor(color);
+        var oppositeColor = Constants.OppositeColor(color);
 
         var ids = _chessBoard.GetAllIds().ToList();
 

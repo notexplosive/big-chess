@@ -82,7 +82,7 @@ public static class Constants
         return gridPosition.ToVector2() * Constants.TileSize;
     }
 
-    public static PieceColor FlipColor(PieceColor color)
+    public static PieceColor OppositeColor(PieceColor color)
     {
         return color switch
         {

@@ -77,6 +77,12 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         _input.DragSucceeded += DragSucceeded;
         _input.DragFinished += DragFinished;
         _gameState.PromotionRequested += RequestPromotion;
+        _gameState.TurnChanged += AnnounceTurn;
+    }
+
+    private void AnnounceTurn(PieceColor color)
+    {
+        Client.Debug.Log($"{color} to move");
     }
 
     public override CartridgeConfig CartridgeConfig => new(Constants.RenderResolution, SamplerState.AnisotropicWrap);
@@ -158,20 +164,17 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     {
         if (_isEditMode)
         {
-            if (mouseButton == MouseButton.Right)
+            if (_board.IsEmptySquare(position))
             {
-                if (_board.IsEmptySquare(position))
+                _spawnPrompt.Request(pieceType =>
                 {
-                    _spawnPrompt.Request(pieceType =>
-                    {
-                        _board.AddPiece(new ChessPiece
-                            {PieceType = pieceType, Position = position, Color = _gameState.CurrentTurn});
-                    });
-                }
-                else
-                {
-                    _board.CapturePiece(_board.GetPieceAt(position)!.Value.Id);
-                }
+                    _board.AddPiece(new ChessPiece
+                        {PieceType = pieceType, Position = position, Color = _gameState.CurrentTurn});
+                });
+            }
+            else if (mouseButton == MouseButton.Right)
+            {
+                _board.CapturePiece(_board.GetPieceAt(position)!.Value.Id);
             }
         }
         else
@@ -252,7 +255,6 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             if (input.Keyboard.GetButton(Keys.W).WasPressed)
             {
                 _gameState.NextTurn();
-                Client.Debug.Log($"{_gameState.CurrentTurn} to move");
             }
 
             if (!IsPromptOpen())

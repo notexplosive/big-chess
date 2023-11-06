@@ -6,14 +6,26 @@ namespace BigChess;
 public class ChessGameState
 {
     private int? _promotingPieceId;
-    public PieceColor CurrentTurn { get; private set; }
+    private PieceColor _currentTurn;
+
+    public PieceColor CurrentTurn
+    {
+        get => _currentTurn;
+        private set
+        {
+            _currentTurn = value;
+            TurnChanged?.Invoke(value);
+        }
+    }
+
     public int PendingPromotionId => _promotingPieceId ?? -1;
 
     public event Action<ChessPiece>? PromotionRequested;
+    public event Action<PieceColor>? TurnChanged;
 
     public void NextTurn()
     {
-        CurrentTurn = Constants.FlipColor(CurrentTurn);
+        CurrentTurn = Constants.OppositeColor(CurrentTurn);
     }
 
     public void OnPieceMoved(ChessMove move)
