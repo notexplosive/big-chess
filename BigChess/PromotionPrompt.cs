@@ -7,16 +7,14 @@ using ExplogineMonoGame.AssetManagement;
 using ExplogineMonoGame.Data;
 using ExplogineMonoGame.Input;
 using ExplogineMonoGame.Layout;
-using ExplogineMonoGame.Rails;
 using Microsoft.Xna.Framework;
 
 namespace BigChess;
 
-public class PromotionUi : IUpdateInputHook, IUpdateHook, IDrawHook
+public class PromotionPrompt : Prompt
 {
     private const int ButtonSize = 128;
     private readonly Assets _assets;
-    private readonly ChessBoard _chessBoard;
     private readonly bool _canBeClosed;
     private readonly ChessGameState _gameState;
     private readonly LayoutArrangement _layout;
@@ -30,15 +28,14 @@ public class PromotionUi : IUpdateInputHook, IUpdateHook, IDrawHook
     private Action<PieceType>? _bufferedCallback;
     private PieceType? _hoveredButton;
     private PieceType? _primedButton;
-    private HoverState _backgroundHover = new();
 
-    public PromotionUi(ChessGameState gameState, IRuntime runtime, Assets assets, ChessBoard chessBoard, bool canBeClosed, List<string> pieceNames)
+    public PromotionPrompt(ChessGameState gameState, IRuntime runtime, Assets assets,
+        bool canBeClosed, List<string> pieceNames)
     {
         _pieceNames = pieceNames;
         _gameState = gameState;
         _runtime = runtime;
         _assets = assets;
-        _chessBoard = chessBoard;
         _canBeClosed = canBeClosed;
 
         var root = new LayoutBuilder(new Style {PaddingBetweenElements = 10, Alignment = Alignment.Center});
@@ -46,7 +43,7 @@ public class PromotionUi : IUpdateInputHook, IUpdateHook, IDrawHook
         for (var i = 0; i < _pieceNames.Count; i++)
         {
             var name = _pieceNames[i];
-            root.Add(L.FixedElement(name, PromotionUi.ButtonSize, PromotionUi.ButtonSize));
+            root.Add(L.FixedElement(name, PromotionPrompt.ButtonSize, PromotionPrompt.ButtonSize));
 
             if (i != _pieceNames.Count - 1)
             {
@@ -54,18 +51,15 @@ public class PromotionUi : IUpdateInputHook, IUpdateHook, IDrawHook
             }
         }
 
-        _layout = root.Bake(new Vector2(PromotionUi.ButtonSize * (_pieceNames.Count + 1), PromotionUi.ButtonSize).ToRectangleF());
+        _layout = root.Bake(
+            new Vector2(PromotionPrompt.ButtonSize * (_pieceNames.Count + 1), PromotionPrompt.ButtonSize)
+                .ToRectangleF());
     }
 
-    public bool IsActive => _bufferedCallback != null;
+    protected override bool IsActive => _bufferedCallback != null;
 
-    public void Draw(Painter painter)
+    protected override void DrawInternal(Painter painter)
     {
-        if (!IsActive)
-        {
-            return;
-        }
-
         painter.BeginSpriteBatch();
         foreach (var name in _pieceNames)
         {
@@ -76,7 +70,7 @@ public class PromotionUi : IUpdateInputHook, IUpdateHook, IDrawHook
 
             if (_primedButton == itemType && _hoveredButton == itemType)
             {
-                inflateAmount = -new Vector2(PromotionUi.ButtonSize) / 32f;
+                inflateAmount = -new Vector2(PromotionPrompt.ButtonSize) / 32f;
             }
 
             itemRectangle = itemRectangle.Inflated(inflateAmount);
@@ -102,21 +96,13 @@ public class PromotionUi : IUpdateInputHook, IUpdateHook, IDrawHook
         painter.EndSpriteBatch();
     }
 
-    public void Update(float dt)
+    public override void Update(float dt)
     {
     }
 
-    public void UpdateInput(ConsumableInput input, HitTestStack hitTestStack)
+    protected override void UpdateInputInternal(ConsumableInput input, HitTestStack overlayLayer)
     {
-        if (!IsActive)
-        {
-            return;
-        }
-
-        var overlayLayer = hitTestStack.AddLayer(Matrix.Identity, Depth.Front + 100);
-        overlayLayer.AddInfiniteZone(Depth.Back, _backgroundHover);
-
-        if (_backgroundHover && input.Mouse.WasAnyButtonPressedOrReleased() && _canBeClosed)
+        if (BackgroundHover && input.Mouse.WasAnyButtonPressedOrReleased() && _canBeClosed)
         {
             _bufferedCallback = null;
         }

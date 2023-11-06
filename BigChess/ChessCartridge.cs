@@ -20,8 +20,8 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     private readonly DiegeticUi _diegeticUi;
     private readonly ChessGameState _gameState;
     private readonly ChessInput _input;
-    private readonly PromotionUi _promotionUi;
-    private readonly PromotionUi _spawnUi;
+    private readonly PromotionPrompt _promotionPrompt;
+    private readonly PromotionPrompt _spawnPrompt;
     private readonly UiState _uiState;
     private bool _isEditMode;
 
@@ -33,7 +33,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         _board = new ChessBoard(_gameState);
         _uiState = new UiState();
         _diegeticUi = new DiegeticUi(_uiState, _board, _assets, _gameState, _input);
-        _spawnUi = new PromotionUi(_gameState, runtime, _assets, _board, true, new List<string>
+        _spawnPrompt = new PromotionPrompt(_gameState, runtime, _assets, true, new List<string>
         {
             nameof(PieceType.Pawn),
             nameof(PieceType.Queen),
@@ -42,7 +42,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             nameof(PieceType.Rook),
             nameof(PieceType.King)
         });
-        _promotionUi = new PromotionUi(_gameState, runtime, _assets, _board, false, new List<string>
+        _promotionPrompt = new PromotionPrompt(_gameState, runtime, _assets, false, new List<string>
         {
             nameof(PieceType.Queen),
             nameof(PieceType.Bishop),
@@ -115,7 +115,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
 
     private void RequestPromotion(ChessPiece piece)
     {
-        _promotionUi.Request(type => { _board.Promote(_gameState.PendingPromotionId, type); });
+        _promotionPrompt.Request(type => { _board.Promote(_gameState.PendingPromotionId, type); });
     }
 
     private void DragFinished(Point? position)
@@ -192,7 +192,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             {
                 if (_board.IsEmptySquare(position))
                 {
-                    _spawnUi.Request(pieceType =>
+                    _spawnPrompt.Request(pieceType =>
                     {
                         _board.AddPiece(new ChessPiece
                             {PieceType = pieceType, Position = position, Color = _gameState.CurrentTurn});
@@ -297,8 +297,8 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         }
 
         _diegeticUi.UpdateInput(input, worldLayer);
-        _promotionUi.UpdateInput(input, screenLayer);
-        _spawnUi.UpdateInput(input, screenLayer);
+        _promotionPrompt.UpdateInput(input, screenLayer);
+        _spawnPrompt.UpdateInput(input, screenLayer);
     }
 
     private void HandleCameraControls(ConsumableInput input, HitTestStack layer)
@@ -330,16 +330,16 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     public override void Update(float dt)
     {
         _diegeticUi.Update(dt);
-        _promotionUi.Update(dt);
-        _spawnUi.Update(dt);
+        _promotionPrompt.Update(dt);
+        _spawnPrompt.Update(dt);
     }
 
     public override void Draw(Painter painter)
     {
         DrawBoard(painter);
         _diegeticUi.Draw(painter, _camera);
-        _promotionUi.Draw(painter);
-        _spawnUi.Draw(painter);
+        _promotionPrompt.Draw(painter);
+        _spawnPrompt.Draw(painter);
     }
 
     private void DrawBoard(Painter painter)
