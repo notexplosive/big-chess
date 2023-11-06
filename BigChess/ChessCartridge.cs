@@ -10,24 +10,21 @@ using ExplogineMonoGame.Rails;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Newtonsoft.Json;
 
 namespace BigChess;
 
 public class ChessCartridge : BasicGameCartridge, IHotReloadable
 {
     private readonly Assets _assets;
-    private readonly ChessBoard _board;
     private readonly Camera _camera;
     private readonly DiegeticUi _diegeticUi;
+    private readonly EditorSession _editorSession;
     private readonly GameSession _gameSession;
     private readonly ChessGameState _gameState;
     private readonly ChessInput _input;
-    private readonly PromotionPrompt _promotionPrompt;
     private readonly Rail _promptRail = new();
     private readonly UiState _uiState;
     private bool _isEditMode;
-    private readonly EditorSession _editorSession;
 
     public ChessCartridge(IRuntime runtime) : base(runtime)
     {
@@ -35,8 +32,8 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         _gameState = new ChessGameState();
         _uiState = new UiState(_gameState);
         _input = new ChessInput(_uiState);
-        _board = new ChessBoard(_gameState);
-        _diegeticUi = new DiegeticUi(_uiState, _board, _assets, _gameState, _input);
+        var board = new ChessBoard(_gameState);
+        _diegeticUi = new DiegeticUi(_uiState, board, _assets, _gameState, _input);
         var spawnPrompt = new PromotionPrompt(_gameState, runtime, _assets, true, new List<string>
         {
             nameof(PieceType.Pawn),
@@ -46,7 +43,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             nameof(PieceType.Rook),
             nameof(PieceType.King)
         });
-        _promotionPrompt = new PromotionPrompt(_gameState, runtime, _assets, false, new List<string>
+        var promotionPrompt = new PromotionPrompt(_gameState, runtime, _assets, false, new List<string>
         {
             nameof(PieceType.Queen),
             nameof(PieceType.Bishop),
@@ -55,29 +52,28 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         });
         var savePrompt = new SavePrompt(runtime);
         var openPrompt = new OpenPrompt(runtime);
-        var editorCommandsPrompt = new EditorCommandsPrompt(runtime, _board);
+        var editorCommandsPrompt = new EditorCommandsPrompt(runtime, board);
 
         _camera = new Camera(Constants.RenderResolution.ToRectangleF(), Constants.RenderResolution);
         _camera.CenterPosition = Constants.TotalBoardSizePixels.ToVector2() / 2f;
         _camera.ZoomOutFrom(
             (int) (Constants.TotalBoardSizePixels.X * runtime.Window.RenderResolution.AspectRatio() * 1.5f),
             _camera.CenterPosition);
-        
-        _gameSession = new GameSession(_gameState, _uiState, _board, _diegeticUi);
-        _editorSession = new EditorSession(_gameState, _board, _diegeticUi, spawnPrompt, savePrompt, openPrompt, editorCommandsPrompt);
+
+        _gameSession = new GameSession(_gameState, _uiState, board, _diegeticUi, promotionPrompt);
+        _editorSession = new EditorSession(_gameState, board, _diegeticUi, spawnPrompt, savePrompt, openPrompt,
+            editorCommandsPrompt);
 
         _promptRail.Add(savePrompt);
-        _promptRail.Add(_promotionPrompt);
+        _promptRail.Add(promotionPrompt);
         _promptRail.Add(spawnPrompt);
         _promptRail.Add(openPrompt);
         _promptRail.Add(editorCommandsPrompt);
-
 
         _input.SquareClicked += ClickOn;
         _input.DragInitiated += DragInitiated;
         _input.DragSucceeded += DragSucceeded;
         _input.DragFinished += DragFinished;
-        _gameState.PromotionRequested += RequestPromotion;
         _gameState.TurnChanged += AnnounceTurn;
     }
 
@@ -91,11 +87,6 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     private void AnnounceTurn(PieceColor color)
     {
         Client.Debug.Log($"{color} to move");
-    }
-
-    private void RequestPromotion(ChessPiece piece)
-    {
-        _promotionPrompt.Request(type => { _board.Promote(_gameState.PendingPromotionId, type); });
     }
 
     private void DragFinished(Point? position)

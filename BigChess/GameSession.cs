@@ -11,13 +11,24 @@ public class GameSession : Session
     private readonly UiState _uiState;
     private readonly ChessBoard _board;
     private readonly DiegeticUi _diegeticUi;
+    private readonly PromotionPrompt _promotionPrompt;
 
-    public GameSession(ChessGameState gameState, UiState uiState, ChessBoard board, DiegeticUi diegeticUi)
+    public GameSession(ChessGameState gameState, UiState uiState, ChessBoard board, DiegeticUi diegeticUi,
+        PromotionPrompt promotionPrompt)
     {
         _gameState = gameState;
         _uiState = uiState;
         _board = board;
         _diegeticUi = diegeticUi;
+        _promotionPrompt = promotionPrompt;
+
+        _gameState.PromotionRequested += RequestPromotion;
+    }
+    
+    
+    private void RequestPromotion(ChessPiece piece)
+    {
+        _promotionPrompt.Request(type => { _board.Promote(_gameState.PendingPromotionId, type); });
     }
 
     public override void DragInitiated(Point position)
