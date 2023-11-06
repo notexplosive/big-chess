@@ -5,12 +5,12 @@ using Microsoft.Xna.Framework;
 
 namespace BigChess;
 
-public class EditorPrompt : ButtonListPrompt
+public class EditorCommandsPrompt : ButtonListPrompt
 {
     private readonly ChessBoard _chessBoard;
     private bool _isOpen;
 
-    public EditorPrompt(IRuntime runtime, ChessBoard chessBoard) : base(runtime, "Editor")
+    public EditorCommandsPrompt(IRuntime runtime, ChessBoard chessBoard) : base(runtime, "Editor")
     {
         _chessBoard = chessBoard;
     }

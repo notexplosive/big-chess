@@ -20,30 +20,24 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     private readonly ChessBoard _board;
     private readonly Camera _camera;
     private readonly DiegeticUi _diegeticUi;
-    private readonly EditorPrompt _editorPrompt;
     private readonly GameSession _gameSession;
     private readonly ChessGameState _gameState;
     private readonly ChessInput _input;
-    private readonly OpenPrompt _openPrompt;
     private readonly PromotionPrompt _promotionPrompt;
     private readonly Rail _promptRail = new();
-    private readonly SavePrompt _savePrompt;
-    private readonly IFileSystem _scenarioFiles;
-    private readonly PromotionPrompt _spawnPrompt;
     private readonly UiState _uiState;
     private bool _isEditMode;
     private readonly EditorSession _editorSession;
 
     public ChessCartridge(IRuntime runtime) : base(runtime)
     {
-        _scenarioFiles = Client.Debug.RepoFileSystem.GetDirectory("Scenarios");
         _assets = new Assets();
         _gameState = new ChessGameState();
         _uiState = new UiState(_gameState);
         _input = new ChessInput(_uiState);
         _board = new ChessBoard(_gameState);
         _diegeticUi = new DiegeticUi(_uiState, _board, _assets, _gameState, _input);
-        _spawnPrompt = new PromotionPrompt(_gameState, runtime, _assets, true, new List<string>
+        var spawnPrompt = new PromotionPrompt(_gameState, runtime, _assets, true, new List<string>
         {
             nameof(PieceType.Pawn),
             nameof(PieceType.Queen),
@@ -59,9 +53,9 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             nameof(PieceType.Knight),
             nameof(PieceType.Rook)
         });
-        _savePrompt = new SavePrompt(runtime);
-        _openPrompt = new OpenPrompt(runtime);
-        _editorPrompt = new EditorPrompt(runtime, _board);
+        var savePrompt = new SavePrompt(runtime);
+        var openPrompt = new OpenPrompt(runtime);
+        var editorCommandsPrompt = new EditorCommandsPrompt(runtime, _board);
 
         _camera = new Camera(Constants.RenderResolution.ToRectangleF(), Constants.RenderResolution);
         _camera.CenterPosition = Constants.TotalBoardSizePixels.ToVector2() / 2f;
@@ -70,13 +64,13 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             _camera.CenterPosition);
         
         _gameSession = new GameSession(_gameState, _uiState, _board, _diegeticUi);
-        _editorSession = new EditorSession();
+        _editorSession = new EditorSession(_gameState, _board, _diegeticUi, spawnPrompt, savePrompt, openPrompt, editorCommandsPrompt);
 
-        _promptRail.Add(_savePrompt);
+        _promptRail.Add(savePrompt);
         _promptRail.Add(_promotionPrompt);
-        _promptRail.Add(_spawnPrompt);
-        _promptRail.Add(_openPrompt);
-        _promptRail.Add(_editorPrompt);
+        _promptRail.Add(spawnPrompt);
+        _promptRail.Add(openPrompt);
+        _promptRail.Add(editorCommandsPrompt);
 
 
         _input.SquareClicked += ClickOn;
@@ -106,19 +100,21 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
 
     private void DragFinished(Point? position)
     {
-        _gameSession.DragFinished(position);
+        if (_isEditMode)
+        {
+            _editorSession.DragFinished(position);
+        }
+        else
+        {
+            _gameSession.DragFinished(position);
+        }
     }
 
     private void DragInitiated(Point position)
     {
         if (_isEditMode)
         {
-            var piece = _board.GetPieceAt(position);
-
-            if (piece != null)
-            {
-                _diegeticUi.BeginDrag(piece!.Value);
-            }
+            _editorSession.DragInitiated(position);
         }
         else
         {
@@ -130,16 +126,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     {
         if (_isEditMode)
         {
-            var id = _diegeticUi.DraggedId;
-            if (id.HasValue)
-            {
-                var piece = _board.GetPieceFromId(id.Value);
-
-                if (piece.HasValue)
-                {
-                    _board.MovePiece(new ChessMove(piece.Value, position));
-                }
-            }
+            _editorSession.DragSucceeded(dragStart, position);
         }
         else
         {
@@ -151,18 +138,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     {
         if (_isEditMode)
         {
-            if (_board.IsEmptySquare(position))
-            {
-                _spawnPrompt.Request(pieceType =>
-                {
-                    _board.AddPiece(new ChessPiece
-                        {PieceType = pieceType, Position = position, Color = _gameState.CurrentTurn});
-                });
-            }
-            else if (mouseButton == MouseButton.Right)
-            {
-                _board.CapturePiece(_board.GetPieceAt(position)!.Value.Id);
-            }
+            _editorSession.ClickOn(position, mouseButton);
         }
         else
         {
@@ -185,35 +161,11 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
 
         if (_isEditMode)
         {
-            if (input.Keyboard.GetButton(Keys.W).WasPressed)
-            {
-                _gameState.NextTurn();
-            }
-
-            if (!IsPromptOpen())
-            {
-                if (input.Keyboard.Modifiers.Control)
-                {
-                    if (input.Keyboard.GetButton(Keys.S, true).WasPressed)
-                    {
-                        _savePrompt.Request(fileName =>
-                        {
-                            var json = JsonConvert.SerializeObject(_board.Serialize(), Formatting.Indented);
-                            _scenarioFiles.WriteToFile(fileName, json);
-                        });
-                    }
-
-                    if (input.Keyboard.GetButton(Keys.O, true).WasPressed)
-                    {
-                        _openPrompt.Request(scenario => { _board.Deserialize(scenario); });
-                    }
-                }
-
-                if (input.Keyboard.GetButton(Keys.E).WasPressed)
-                {
-                    _editorPrompt.Open();
-                }
-            }
+            _editorSession.UpdateInput(input, screenLayer);
+        }
+        else
+        {
+            _gameSession.UpdateInput(input, screenLayer);
         }
 
         var worldLayer = screenLayer.AddLayer(_camera.ScreenToCanvas, Depth.Middle);
@@ -228,11 +180,6 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         }
 
         _diegeticUi.UpdateInput(input, worldLayer);
-    }
-
-    private bool IsPromptOpen()
-    {
-        return _savePrompt.IsOpen || _openPrompt.IsOpen || _spawnPrompt.IsOpen;
     }
 
     private void HandleCameraControls(ConsumableInput input, HitTestStack layer)

@@ -1,4 +1,6 @@
-﻿using ExplogineMonoGame.Input;
+﻿using ExplogineMonoGame;
+using ExplogineMonoGame.Data;
+using ExplogineMonoGame.Input;
 using Microsoft.Xna.Framework;
 
 namespace BigChess;
@@ -110,5 +112,10 @@ public class GameSession : Session
         {
             _uiState.SelectedPiece = null;
         }
+    }
+
+    public override void UpdateInput(ConsumableInput input, HitTestStack screenLayer)
+    {
+        
     }
 }
