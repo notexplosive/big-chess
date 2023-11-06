@@ -18,6 +18,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     private readonly ProposedMoveSquare _proposedMoveSquare;
     private readonly List<TargetSquare> _targetSquares = new();
     private readonly SequenceTween _tween = new();
+
     private PieceRenderer? _draggedPiece;
     private SelectedSquare? _selection;
 
@@ -40,6 +41,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     }
 
     public AnimatedObjectCollection AnimatedObjects { get; } = new();
+    public int? DraggedId => _draggedPiece?.PieceId;
 
     public void Update(float dt)
     {
@@ -57,7 +59,8 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     {
         if (_draggedPiece != null)
         {
-            _draggedPiece.Drag(_tween,input.Mouse.Position(hitTestStack.WorldMatrix) - new Vector2(Constants.TileSize) / 2f);
+            _draggedPiece.Drag(_tween,
+                input.Mouse.Position(hitTestStack.WorldMatrix) - new Vector2(Constants.TileSize) / 2f);
         }
     }
 
@@ -138,7 +141,8 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
             {
                 if (_board.GetPieceAt(landingPosition.Position) != null)
                 {
-                    _targetSquares.Add(AnimatedObjects.Add(new AttackSquare(startingPosition, landingPosition.Position)));
+                    _targetSquares.Add(
+                        AnimatedObjects.Add(new AttackSquare(startingPosition, landingPosition.Position)));
                 }
 
                 if (Constants.IsWithinBoard(landingPosition.Position))
@@ -166,7 +170,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
         _draggedPiece = _pieceRenderers[piece.Id];
     }
 
-    private void OnDragFinished()
+    private void OnDragFinished(Point? position)
     {
         _proposedMoveSquare.Visible = false;
     }

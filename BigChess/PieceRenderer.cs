@@ -22,7 +22,7 @@ public class PieceRenderer : AnimatedObject
     /// </summary>
     private readonly ChessPiece _originalPiece;
 
-    private readonly int _pieceId;
+    public int PieceId { get; }
     private readonly TweenableFloat _scale = new(1f);
     private bool _isDrawingPieceExactly = true;
     private readonly SequenceTween _isolatedTween = new();
@@ -31,7 +31,7 @@ public class PieceRenderer : AnimatedObject
     public PieceRenderer(ChessPiece originalPiece, ChessBoard board, Assets assets)
     {
         _originalPiece = originalPiece;
-        _pieceId = originalPiece.Id;
+        PieceId = originalPiece.Id;
         _board = board;
         _assets = assets;
     }
@@ -87,7 +87,7 @@ public class PieceRenderer : AnimatedObject
 
     public ChessPiece? GetPiece()
     {
-        return _board.GetPieceFromId(_pieceId);
+        return _board.GetPieceFromId(PieceId);
     }
 
     public override void Update(float dt)

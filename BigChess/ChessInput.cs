@@ -10,6 +10,7 @@ public class ChessInput
     private readonly ChessGameState _gameState;
     private Point? _hoveredSquare;
     private bool _isDragging;
+    private MouseButton? _primedButton;
 
     public ChessInput(ChessGameState gameState)
     {
@@ -20,8 +21,8 @@ public class ChessInput
 
     public event Action<Point, Point>? DragSucceeded;
     public event Action? DragCancelled;
-    public event Action? DragFinished;
-    public event Action<Point>? SquareClicked;
+    public event Action<Point?>? DragFinished;
+    public event Action<Point, MouseButton>? SquareClicked;
     public event Action<Point>? SquareHovered;
     public event Action<Point>? DragInitiated;
 
@@ -41,7 +42,9 @@ public class ChessInput
         if (input.Mouse.GetButton(MouseButton.Left).WasPressed)
         {
             input.Mouse.Consume(MouseButton.Left);
+            
             PrimedSquare = gridPosition;
+            _primedButton = MouseButton.Left;
             _isDragging = true;
 
             DragInitiated?.Invoke(gridPosition);
@@ -50,22 +53,49 @@ public class ChessInput
         if (input.Mouse.GetButton(MouseButton.Left).WasReleased)
         {
             input.Mouse.Consume(MouseButton.Left);
-            
-            if (PrimedSquare == gridPosition)
-            {
-                SquareClicked?.Invoke(gridPosition);
-            }
-            else if(PrimedSquare.HasValue)
-            {
-                DragSucceeded?.Invoke(PrimedSquare.Value, gridPosition);
-            }
 
-            if (_isDragging)
+            if (_primedButton == MouseButton.Left)
             {
-                DragFinished?.Invoke();
+                if (PrimedSquare == gridPosition)
+                {
+                    SquareClicked?.Invoke(gridPosition, MouseButton.Left);
+                }
+                else if (PrimedSquare.HasValue)
+                {
+                    DragSucceeded?.Invoke(PrimedSquare.Value, gridPosition);
+                }
+
+                if (_isDragging)
+                {
+                    DragFinished?.Invoke(gridPosition);
+                }
             }
 
             PrimedSquare = null;
+            _primedButton = null;
+        }
+
+        if (input.Mouse.GetButton(MouseButton.Right).WasPressed)
+        {
+            input.Mouse.Consume(MouseButton.Right);
+            PrimedSquare = gridPosition;
+            _primedButton = MouseButton.Right;
+        }
+
+        if (input.Mouse.GetButton(MouseButton.Right).WasReleased)
+        {
+            input.Mouse.Consume(MouseButton.Right);
+
+            if (_primedButton == MouseButton.Right)
+            {
+                if (PrimedSquare == gridPosition)
+                {
+                    SquareClicked?.Invoke(gridPosition, MouseButton.Right);
+                }
+            }
+
+            PrimedSquare = null;
+            _primedButton = null;
         }
     }
 
@@ -74,7 +104,7 @@ public class ChessInput
         if (input.Mouse.GetButton(MouseButton.Left).WasReleased && _isDragging)
         {
             DragCancelled?.Invoke();
-            DragFinished?.Invoke();
+            DragFinished?.Invoke(null);
         }
     }
 }

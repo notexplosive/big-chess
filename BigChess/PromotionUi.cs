@@ -17,30 +17,29 @@ public class PromotionUi : IUpdateInputHook, IUpdateHook, IDrawHook
     private const int ButtonSize = 128;
     private readonly Assets _assets;
     private readonly ChessBoard _chessBoard;
+    private readonly bool _canBeClosed;
     private readonly ChessGameState _gameState;
     private readonly LayoutArrangement _layout;
 
     /// <summary>
     ///     Names of all pieces that can be promoted to
     /// </summary>
-    private readonly List<string> _pieceNames = new()
-    {
-        nameof(PieceType.Queen),
-        nameof(PieceType.Bishop),
-        nameof(PieceType.Knight),
-        nameof(PieceType.Rook)
-    };
+    private readonly List<string> _pieceNames;
 
     private readonly IRuntime _runtime;
+    private Action<PieceType>? _bufferedCallback;
     private PieceType? _hoveredButton;
     private PieceType? _primedButton;
+    private HoverState _backgroundHover = new();
 
-    public PromotionUi(ChessGameState gameState, IRuntime runtime, Assets assets, ChessBoard chessBoard)
+    public PromotionUi(ChessGameState gameState, IRuntime runtime, Assets assets, ChessBoard chessBoard, bool canBeClosed, List<string> pieceNames)
     {
+        _pieceNames = pieceNames;
         _gameState = gameState;
         _runtime = runtime;
         _assets = assets;
         _chessBoard = chessBoard;
+        _canBeClosed = canBeClosed;
 
         var root = new LayoutBuilder(new Style {PaddingBetweenElements = 10, Alignment = Alignment.Center});
 
@@ -55,10 +54,10 @@ public class PromotionUi : IUpdateInputHook, IUpdateHook, IDrawHook
             }
         }
 
-        _layout = root.Bake(new Vector2(PromotionUi.ButtonSize * 5, PromotionUi.ButtonSize).ToRectangleF());
+        _layout = root.Bake(new Vector2(PromotionUi.ButtonSize * (_pieceNames.Count + 1), PromotionUi.ButtonSize).ToRectangleF());
     }
 
-    public bool IsActive => _gameState.HasPendingPromotion;
+    public bool IsActive => _bufferedCallback != null;
 
     public void Draw(Painter painter)
     {
@@ -115,6 +114,12 @@ public class PromotionUi : IUpdateInputHook, IUpdateHook, IDrawHook
         }
 
         var overlayLayer = hitTestStack.AddLayer(Matrix.Identity, Depth.Front + 100);
+        overlayLayer.AddInfiniteZone(Depth.Back, _backgroundHover);
+
+        if (_backgroundHover && input.Mouse.WasAnyButtonPressedOrReleased() && _canBeClosed)
+        {
+            _bufferedCallback = null;
+        }
 
         foreach (var name in _pieceNames)
         {
@@ -135,7 +140,8 @@ public class PromotionUi : IUpdateInputHook, IUpdateHook, IDrawHook
         {
             if (_primedButton != null && _primedButton == _hoveredButton)
             {
-                _chessBoard.Promote(_gameState.PendingPromotionId, _primedButton.Value);
+                _bufferedCallback?.Invoke(_primedButton.Value);
+                _bufferedCallback = null;
             }
 
             _primedButton = null;
@@ -180,5 +186,10 @@ public class PromotionUi : IUpdateInputHook, IUpdateHook, IDrawHook
     {
         return RectangleF.FromSizeAlignedWithin(_runtime.Window.RenderResolution.ToRectangleF(),
             _layout.UsedSpace.Size, Alignment.Center);
+    }
+
+    public void Request(Action<PieceType> onResponse)
+    {
+        _bufferedCallback = onResponse;
     }
 }

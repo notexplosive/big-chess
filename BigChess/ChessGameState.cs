@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Xna.Framework;
 
 namespace BigChess;
@@ -6,10 +7,11 @@ public class ChessGameState
 {
     private int? _promotingPieceId;
     public PieceColor CurrentTurn { get; private set; }
-    public bool HasPendingPromotion => _promotingPieceId.HasValue;
     public int PendingPromotionId => _promotingPieceId ?? -1;
-    public bool PlayerCanMovePieces => _playerIsActionable && !HasPendingPromotion;
+    public bool PlayerCanMovePieces => _playerIsActionable && ! _promotingPieceId.HasValue;
     private bool _playerIsActionable = true;
+
+    public event Action<ChessPiece>? PromotionRequested;
 
     public void NextTurn()
     {
@@ -34,6 +36,7 @@ public class ChessGameState
             if (!Constants.IsWithinBoard(piece.Position + Constants.Forward(piece.Color)))
             {
                 _promotingPieceId = piece.Id;
+                PromotionRequested?.Invoke(piece);
             }
         }
     }
