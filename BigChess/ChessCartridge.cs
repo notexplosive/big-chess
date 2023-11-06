@@ -32,6 +32,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     private readonly PromotionPrompt _spawnPrompt;
     private readonly UiState _uiState;
     private bool _isEditMode;
+    private readonly EditorSession _editorSession;
 
     public ChessCartridge(IRuntime runtime) : base(runtime)
     {
@@ -69,6 +70,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             _camera.CenterPosition);
         
         _gameSession = new GameSession(_gameState, _uiState, _board, _diegeticUi);
+        _editorSession = new EditorSession();
 
         _promptRail.Add(_savePrompt);
         _promptRail.Add(_promotionPrompt);

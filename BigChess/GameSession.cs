@@ -18,7 +18,7 @@ public class GameSession : Session
         _diegeticUi = diegeticUi;
     }
 
-    protected override void DragInitiated(Point position)
+    public override void DragInitiated(Point position)
     {
         var piece = _board.GetPieceAt(position);
 
@@ -45,7 +45,7 @@ public class GameSession : Session
         return piece.HasValue && piece.Value.Color == _gameState.CurrentTurn;
     }
 
-    public void ClickOn(Point position, MouseButton mouseButton)
+    public override void ClickOn(Point position, MouseButton mouseButton)
     {
         _diegeticUi.ClearDrag();
         var piece = _board.GetPieceAt(position);
@@ -88,7 +88,7 @@ public class GameSession : Session
         return null;
     }
 
-    public void DragSucceeded(Point dragStart, Point position)
+    public override void DragSucceeded(Point dragStart, Point position)
     {
         var move = GetSelectedPieceValidMoveTo(position);
         if (move != null)
@@ -102,7 +102,7 @@ public class GameSession : Session
         }
     }
 
-    public void DragFinished(Point? position)
+    public override void DragFinished(Point? position)
     {
         _diegeticUi.ClearDrag();
 

@@ -7,8 +7,8 @@ namespace BigChess;
 
 public abstract class Session
 {
-    protected abstract void DragInitiated(Point position);
-    protected abstract void ClickOn(Point position, MouseButton mouseButton);
-    protected abstract void DragSucceeded(Point dragStart, Point position);
-    protected abstract void DragFinished(Point? position);
+    public abstract void DragInitiated(Point position);
+    public abstract void ClickOn(Point position, MouseButton mouseButton);
+    public abstract void DragSucceeded(Point dragStart, Point position);
+    public abstract void DragFinished(Point? position);
 }
