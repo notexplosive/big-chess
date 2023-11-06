@@ -56,7 +56,7 @@ public class PromotionPrompt : Prompt
                 .ToRectangleF());
     }
 
-    protected override bool IsActive => _bufferedCallback != null;
+    public override bool IsActive => _bufferedCallback != null;
 
     protected override void DrawInternal(Painter painter)
     {

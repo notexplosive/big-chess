@@ -38,5 +38,5 @@ public abstract class Prompt: IUpdateInputHook, IUpdateHook, IDrawHook
     }
 
     protected abstract void DrawInternal(Painter painter);
-    protected abstract bool IsActive { get; }
+    public abstract bool IsActive { get; }
 }

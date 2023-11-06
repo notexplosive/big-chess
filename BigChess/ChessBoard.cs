@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ExplogineMonoGame;
 using Microsoft.Xna.Framework;
+using Newtonsoft.Json;
 
 namespace BigChess;
 
@@ -112,4 +113,36 @@ public class ChessBoard
             PieceDeleted?.Invoke(oldPiece);
         }
     }
+
+    public SerializedBoard Serialize()
+    {
+        var result = new SerializedBoard();
+
+        foreach (var piece in _pieces.Values)
+        {
+            result.Pieces.Add(piece.Serialize());
+        }
+
+        return result;
+    }
+}
+
+[Serializable]
+public class SerializedBoard
+{
+    [JsonProperty("pieces")]
+    public List<SerializedChessPiece> Pieces { get; set; } = new();
+}
+
+[Serializable]
+public class SerializedChessPiece
+{
+    [JsonProperty("position")]
+    public SerializedGridPosition Position { get; set; } = new();
+
+    [JsonProperty("type")]
+    public PieceType Type { get; set; }
+    
+    [JsonProperty("color")]
+    public PieceColor Color { get; set; }
 }

@@ -176,4 +176,14 @@ public readonly record struct ChessPiece
     {
         return $"[{Id}] {Color} {PieceType} at ({Position.X},{Position.Y})";
     }
+
+    public SerializedChessPiece Serialize()
+    {
+        return new SerializedChessPiece
+        {
+            Position = SerializedGridPosition.FromPoint(Position),
+            Type = PieceType,
+            Color = Color
+        };
+    }
 }

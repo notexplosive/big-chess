@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using ExplogineMonoGame;
 using ExplogineMonoGame.Data;
+using ExplogineMonoGame.Gui;
 using Microsoft.Xna.Framework;
 
 namespace BigChess;
@@ -99,4 +101,6 @@ public static class Constants
 
         return new Point(0, 1);
     }
+
+    public static IGuiTheme Theme { get; } = new SimpleGuiTheme(Color.White, Color.Cyan, Color.Transparent, new IndirectFont("engine/logo-font", 32), selectionColor: Color.Cyan);
 }

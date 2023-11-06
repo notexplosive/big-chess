@@ -20,6 +20,16 @@
         <EmbeddedResource Include="Icon.bmp" />
     </ItemGroup>
 
+    <Target Name="CopyAssets2" AfterTargets="Build">
+        <ItemGroup>
+            <AssetFiles Include="$(SolutionDir)Scenarios\**\*" />
+        </ItemGroup>
+
+        <Copy SourceFiles="@(AssetFiles)" DestinationFiles="@(AssetFiles->'$(TargetDir)Scenarios\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+
+        <Message Importance="High" Text="Copying assets: @(AssetFiles)" />
+    </Target>
+
     <Target Name="CopyAssets" AfterTargets="Build">
         <ItemGroup>
             <AssetFiles Include="$(SolutionDir)DynamicContent\**\*" />

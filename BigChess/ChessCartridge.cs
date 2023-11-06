@@ -9,6 +9,7 @@ using ExplogineMonoGame.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Newtonsoft.Json;
 
 namespace BigChess;
 
@@ -21,12 +22,15 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     private readonly ChessGameState _gameState;
     private readonly ChessInput _input;
     private readonly PromotionPrompt _promotionPrompt;
+    private readonly SavePrompt _savePrompt;
+    private readonly IFileSystem _scenarioFiles;
     private readonly PromotionPrompt _spawnPrompt;
     private readonly UiState _uiState;
     private bool _isEditMode;
 
     public ChessCartridge(IRuntime runtime) : base(runtime)
     {
+        _scenarioFiles = Client.Debug.RepoFileSystem.GetDirectory("Scenarios");
         _assets = new Assets();
         _gameState = new ChessGameState();
         _input = new ChessInput(_gameState);
@@ -49,6 +53,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             nameof(PieceType.Knight),
             nameof(PieceType.Rook)
         });
+        _savePrompt = new SavePrompt(runtime);
         _camera = new Camera(Constants.RenderResolution.ToRectangleF(), Constants.RenderResolution);
 
         _board.AddPiece(new ChessPiece
@@ -121,7 +126,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     private void DragFinished(Point? position)
     {
         _diegeticUi.ClearDrag();
-        
+
         if (_uiState.SelectedPiece.HasValue && _uiState.SelectedPiece.Value.Position != position)
         {
             _uiState.SelectedPiece = null;
@@ -276,13 +281,23 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             _uiState.SelectedPiece = null;
             Client.Debug.Log($"EDIT MODE: {_isEditMode}");
         }
-        
+
         if (_isEditMode)
         {
             if (input.Keyboard.GetButton(Keys.W).WasPressed)
             {
                 _gameState.NextTurn();
                 Client.Debug.Log($"{_gameState.CurrentTurn} to move");
+            }
+
+            if (!_savePrompt.IsActive && input.Keyboard.Modifiers.Control &&
+                input.Keyboard.GetButton(Keys.S, true).WasPressed)
+            {
+                _savePrompt.Request(fileName =>
+                {
+                    var json = JsonConvert.SerializeObject(_board.Serialize(), Formatting.Indented);
+                    _scenarioFiles.WriteToFile(fileName, json);
+                });
             }
         }
 
@@ -299,6 +314,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         _diegeticUi.UpdateInput(input, worldLayer);
         _promotionPrompt.UpdateInput(input, screenLayer);
         _spawnPrompt.UpdateInput(input, screenLayer);
+        _savePrompt.UpdateInput(input, screenLayer);
     }
 
     private void HandleCameraControls(ConsumableInput input, HitTestStack layer)
@@ -332,14 +348,18 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         _diegeticUi.Update(dt);
         _promotionPrompt.Update(dt);
         _spawnPrompt.Update(dt);
+        _savePrompt.Update(dt);
     }
 
     public override void Draw(Painter painter)
     {
+        _savePrompt.EarlyDraw(painter);
+
         DrawBoard(painter);
         _diegeticUi.Draw(painter, _camera);
         _promotionPrompt.Draw(painter);
         _spawnPrompt.Draw(painter);
+        _savePrompt.Draw(painter);
     }
 
     private void DrawBoard(Painter painter)
@@ -363,7 +383,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
                     .DesaturatedBy(extraDesaturate);
                 darkColor = Color.Maroon.BrightenedBy(0.1f).DesaturatedBy(0.35f)
                     .DesaturatedBy(extraDesaturate);
-                
+
                 /*
                 lightColor = new Color(191, 164, 117).DesaturatedBy(extraDesaturate);
                 darkColor = new Color(100, 32, 32).DesaturatedBy(extraDesaturate);
@@ -389,11 +409,11 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
 
     public override IEnumerable<ILoadEvent> LoadEvents(Painter painter)
     {
-        var content = new RealFileSystem("DynamicContent");
+        var content = Client.Debug.RepoFileSystem.GetDirectory("DynamicContent");
 
         foreach (var fileName in content.GetFilesAt(".", "png"))
         {
-            var texture = Texture2D.FromFile(Client.Graphics.Device, content.RootPath + "/" + fileName);
+            var texture = Texture2D.FromFile(Client.Graphics.Device, content.GetCurrentDirectory() + "/" + fileName);
             yield return new VoidLoadEvent(fileName,
                 () => { _assets.AddAsset(fileName.RemoveFileExtension(), new TextureAsset(texture)); });
         }
