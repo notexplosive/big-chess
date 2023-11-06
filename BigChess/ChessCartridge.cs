@@ -20,10 +20,11 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     private readonly ChessBoard _board;
     private readonly Camera _camera;
     private readonly DiegeticUi _diegeticUi;
+    private readonly EditorPrompt _editorPrompt;
+    private readonly GameSession _gameSession;
     private readonly ChessGameState _gameState;
     private readonly ChessInput _input;
     private readonly OpenPrompt _openPrompt;
-    private readonly EditorPrompt _editorPrompt;
     private readonly PromotionPrompt _promotionPrompt;
     private readonly Rail _promptRail = new();
     private readonly SavePrompt _savePrompt;
@@ -61,16 +62,20 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         _openPrompt = new OpenPrompt(runtime);
         _editorPrompt = new EditorPrompt(runtime, _board);
 
+        _camera = new Camera(Constants.RenderResolution.ToRectangleF(), Constants.RenderResolution);
+        _camera.CenterPosition = Constants.TotalBoardSizePixels.ToVector2() / 2f;
+        _camera.ZoomOutFrom(
+            (int) (Constants.TotalBoardSizePixels.X * runtime.Window.RenderResolution.AspectRatio() * 1.5f),
+            _camera.CenterPosition);
+        
+        _gameSession = new GameSession(_gameState, _uiState, _board, _diegeticUi);
+
         _promptRail.Add(_savePrompt);
         _promptRail.Add(_promotionPrompt);
         _promptRail.Add(_spawnPrompt);
         _promptRail.Add(_openPrompt);
         _promptRail.Add(_editorPrompt);
 
-        _camera = new Camera(Constants.RenderResolution.ToRectangleF(), Constants.RenderResolution);
-        _camera.CenterPosition = Constants.TotalBoardSizePixels.ToVector2() / 2f;
-        _camera.ZoomOutFrom((int) (Constants.TotalBoardSizePixels.X * runtime.Window.RenderResolution.AspectRatio() * 1.5f),
-            _camera.CenterPosition);
 
         _input.SquareClicked += ClickOn;
         _input.DragInitiated += DragInitiated;
@@ -80,16 +85,16 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         _gameState.TurnChanged += AnnounceTurn;
     }
 
-    private void AnnounceTurn(PieceColor color)
-    {
-        Client.Debug.Log($"{color} to move");
-    }
-
     public override CartridgeConfig CartridgeConfig => new(Constants.RenderResolution, SamplerState.AnisotropicWrap);
 
     public void OnHotReload()
     {
         Client.Debug.Log("Hot Reloaded!");
+    }
+
+    private void AnnounceTurn(PieceColor color)
+    {
+        Client.Debug.Log($"{color} to move");
     }
 
     private void RequestPromotion(ChessPiece piece)
@@ -99,12 +104,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
 
     private void DragFinished(Point? position)
     {
-        _diegeticUi.ClearDrag();
-
-        if (_uiState.SelectedPiece.HasValue && _uiState.SelectedPiece.Value.Position != position)
-        {
-            _uiState.SelectedPiece = null;
-        }
+        _gameSession.DragFinished(position);
     }
 
     private void DragInitiated(Point position)
@@ -120,13 +120,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         }
         else
         {
-            var piece = _board.GetPieceAt(position);
-
-            if (IsSelectable(piece))
-            {
-                AttemptSelect(piece);
-                _diegeticUi.BeginDrag(piece!.Value);
-            }
+            _gameSession.DragInitiated(position);
         }
     }
 
@@ -147,16 +141,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         }
         else
         {
-            var move = GetSelectedPieceValidMoveTo(position);
-            if (move != null)
-            {
-                _board.MovePiece(move);
-                _uiState.SelectedPiece = null;
-            }
-            else
-            {
-                DragFinished(position);
-            }
+            _gameSession.DragSucceeded(dragStart, position);
         }
     }
 
@@ -179,62 +164,8 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         }
         else
         {
-            _diegeticUi.ClearDrag();
-            var piece = _board.GetPieceAt(position);
-
-            if (piece == _uiState.SelectedPiece)
-            {
-                return;
-            }
-
-            var move = GetSelectedPieceValidMoveTo(position);
-            if (move != null)
-            {
-                _board.MovePiece(move);
-                _uiState.SelectedPiece = null;
-            }
-            else
-            {
-                if (!AttemptSelect(piece))
-                {
-                    _uiState.SelectedPiece = null;
-                }
-            }
+            _gameSession.ClickOn(position, mouseButton);
         }
-    }
-
-    private ChessMove? GetSelectedPieceValidMoveTo(Point position)
-    {
-        if (_uiState.SelectedPiece.HasValue)
-        {
-            var selectedPiece = _uiState.SelectedPiece.Value;
-            var validMoves = selectedPiece.GetValidMoves(_board);
-            var index = validMoves.FindIndex(move => move.Position == position);
-            if (index == -1)
-            {
-                return null;
-            }
-
-            return validMoves[index];
-        }
-
-        return null;
-    }
-
-    private bool AttemptSelect(ChessPiece? piece)
-    {
-        if (IsSelectable(piece))
-        {
-            _uiState.SelectedPiece = piece;
-            return true;
-        }
-
-        return false;
-    }
-
-    private bool IsSelectable(ChessPiece? piece)
-    {
-        return piece.HasValue && piece.Value.Color == _gameState.CurrentTurn;
     }
 
     public override void OnCartridgeStarted()
