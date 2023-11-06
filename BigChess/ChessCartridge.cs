@@ -23,6 +23,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     private readonly ChessGameState _gameState;
     private readonly ChessInput _input;
     private readonly OpenPrompt _openPrompt;
+    private readonly EditorPrompt _editorPrompt;
     private readonly PromotionPrompt _promotionPrompt;
     private readonly Rail _promptRail = new();
     private readonly SavePrompt _savePrompt;
@@ -58,11 +59,13 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         });
         _savePrompt = new SavePrompt(runtime);
         _openPrompt = new OpenPrompt(runtime);
+        _editorPrompt = new EditorPrompt(runtime);
 
         _promptRail.Add(_savePrompt);
         _promptRail.Add(_promotionPrompt);
         _promptRail.Add(_spawnPrompt);
         _promptRail.Add(_openPrompt);
+        _promptRail.Add(_editorPrompt);
 
         _camera = new Camera(Constants.RenderResolution.ToRectangleF(), Constants.RenderResolution);
         _camera.CenterPosition = Constants.TotalBoardSizePixels.ToVector2() / 2f;
@@ -269,6 +272,11 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
                     {
                         _openPrompt.Request(scenario => { _board.Deserialize(scenario); });
                     }
+                }
+
+                if (input.Keyboard.GetButton(Keys.E).WasPressed)
+                {
+                    _editorPrompt.Open();
                 }
             }
         }
