@@ -24,7 +24,7 @@ public class SavePrompt : Prompt, IEarlyDrawHook
                 {Depth = Depth.Front, IsSingleLine = true, Selector = new AlwaysSelected(), ShowScrollbar = false}));
     }
 
-    public override bool IsActive => _bufferedCallback != null;
+    public override bool IsOpen => _bufferedCallback != null;
 
     public void EarlyDraw(Painter painter)
     {
@@ -40,8 +40,6 @@ public class SavePrompt : Prompt, IEarlyDrawHook
             Cancel();
         }
     }
-
-    
 
     public override void Update(float dt)
     {
@@ -61,7 +59,9 @@ public class SavePrompt : Prompt, IEarlyDrawHook
         painter.EndSpriteBatch();
 
         painter.BeginSpriteBatch();
-        painter.DrawStringAtPosition(Client.Assets.GetFont("engine/logo-font", 50), "Name this scenario (press enter when done)", _textInputWidget.Value.Position - new Vector2(0, 64), new DrawSettings());
+        painter.DrawStringAtPosition(Client.Assets.GetFont("engine/logo-font", 50),
+            "Name this scenario (press enter when done)", _textInputWidget.Value.Position - new Vector2(0, 64),
+            new DrawSettings());
         _textInputWidget.Value.Draw(painter);
         painter.EndSpriteBatch();
     }
@@ -88,7 +88,7 @@ public class SavePrompt : Prompt, IEarlyDrawHook
 
         _bufferedCallback = null;
     }
-    
+
     private void Cancel()
     {
         _bufferedCallback = null;

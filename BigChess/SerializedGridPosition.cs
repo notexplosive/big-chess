@@ -17,4 +17,9 @@ public class SerializedGridPosition
     
     [JsonProperty("y")]
     public int Y { get; set; }
+
+    public Point ToPoint()
+    {
+        return new Point(X, Y);
+    }
 }

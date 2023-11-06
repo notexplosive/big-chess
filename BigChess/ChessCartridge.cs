@@ -22,13 +22,14 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     private readonly DiegeticUi _diegeticUi;
     private readonly ChessGameState _gameState;
     private readonly ChessInput _input;
+    private readonly OpenPrompt _openPrompt;
     private readonly PromotionPrompt _promotionPrompt;
+    private readonly Rail _promptRail = new();
     private readonly SavePrompt _savePrompt;
     private readonly IFileSystem _scenarioFiles;
     private readonly PromotionPrompt _spawnPrompt;
     private readonly UiState _uiState;
     private bool _isEditMode;
-    private readonly Rail _promptRail = new();
 
     public ChessCartridge(IRuntime runtime) : base(runtime)
     {
@@ -56,60 +57,17 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             nameof(PieceType.Rook)
         });
         _savePrompt = new SavePrompt(runtime);
+        _openPrompt = new OpenPrompt(runtime);
 
         _promptRail.Add(_savePrompt);
         _promptRail.Add(_promotionPrompt);
         _promptRail.Add(_spawnPrompt);
-        
+        _promptRail.Add(_openPrompt);
+
         _camera = new Camera(Constants.RenderResolution.ToRectangleF(), Constants.RenderResolution);
-
-        _board.AddPiece(new ChessPiece
-            {Position = new Point(3, 1), PieceType = PieceType.Pawn, Color = PieceColor.White});
-
-        _board.AddPiece(new ChessPiece
-            {Position = new Point(3, 3), PieceType = PieceType.Knight, Color = PieceColor.Black});
-
-        _board.AddPiece(new ChessPiece
-            {Position = new Point(5, 4), PieceType = PieceType.Pawn, Color = PieceColor.Black});
-
-        _board.AddPiece(new ChessPiece
-            {Position = new Point(7, 3), PieceType = PieceType.Pawn, Color = PieceColor.Black});
-
-        _board.AddPiece(new ChessPiece
-            {Position = new Point(4, 5), PieceType = PieceType.Knight, Color = PieceColor.White});
-
-        _board.AddPiece(new ChessPiece
-            {Position = new Point(6, 5), PieceType = PieceType.Knight, Color = PieceColor.Black});
-
-        _board.AddPiece(new ChessPiece
-            {Position = new Point(10, 10), PieceType = PieceType.Bishop, Color = PieceColor.White});
-
-        _board.AddPiece(new ChessPiece
-            {Position = new Point(15, 10), PieceType = PieceType.Rook, Color = PieceColor.White});
-
-        _board.AddPiece(new ChessPiece
-            {Position = new Point(5, 10), PieceType = PieceType.Pawn, Color = PieceColor.White});
-
-        _board.AddPiece(new ChessPiece
-            {Position = new Point(16, 11), PieceType = PieceType.Pawn, Color = PieceColor.White});
-
-        _board.AddPiece(new ChessPiece
-            {Position = new Point(16, 5), PieceType = PieceType.Queen, Color = PieceColor.White});
-
-        _board.AddPiece(new ChessPiece
-            {Position = new Point(13, 4), PieceType = PieceType.King, Color = PieceColor.White});
-
-        _board.AddPiece(new ChessPiece
-            {Position = new Point(13, 2), PieceType = PieceType.Rook, Color = PieceColor.White});
-
-        _board.AddPiece(new ChessPiece
-            {Position = new Point(6, 4), PieceType = PieceType.Rook, Color = PieceColor.White});
-
-        _board.AddPiece(new ChessPiece
-            {Position = new Point(20, 4), PieceType = PieceType.Rook, Color = PieceColor.White});
-
-        _board.AddPiece(new ChessPiece
-            {Position = new Point(13, 10), PieceType = PieceType.Rook, Color = PieceColor.White});
+        _camera.CenterPosition = Constants.TotalBoardSizePixels.ToVector2() / 2f;
+        _camera.ZoomOutFrom((int) (Constants.TotalBoardSizePixels.X * runtime.Window.RenderResolution.AspectRatio() * 1.5f),
+            _camera.CenterPosition);
 
         _input.SquareClicked += ClickOn;
         _input.DragInitiated += DragInitiated;
@@ -294,18 +252,29 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
                 Client.Debug.Log($"{_gameState.CurrentTurn} to move");
             }
 
-            if (!_savePrompt.IsActive && input.Keyboard.Modifiers.Control &&
-                input.Keyboard.GetButton(Keys.S, true).WasPressed)
+            if (!IsPromptOpen())
             {
-                _savePrompt.Request(fileName =>
+                if (input.Keyboard.Modifiers.Control)
                 {
-                    var json = JsonConvert.SerializeObject(_board.Serialize(), Formatting.Indented);
-                    _scenarioFiles.WriteToFile(fileName, json);
-                });
+                    if (input.Keyboard.GetButton(Keys.S, true).WasPressed)
+                    {
+                        _savePrompt.Request(fileName =>
+                        {
+                            var json = JsonConvert.SerializeObject(_board.Serialize(), Formatting.Indented);
+                            _scenarioFiles.WriteToFile(fileName, json);
+                        });
+                    }
+
+                    if (input.Keyboard.GetButton(Keys.O, true).WasPressed)
+                    {
+                        _openPrompt.Request(scenario => { _board.Deserialize(scenario); });
+                    }
+                }
             }
         }
 
         var worldLayer = screenLayer.AddLayer(_camera.ScreenToCanvas, Depth.Middle);
+        _promptRail.UpdateInput(input, screenLayer);
         HandleCameraControls(input, worldLayer);
 
         worldLayer.AddInfiniteZone(Depth.Back, () => _input.OnHoverVoid(input));
@@ -316,7 +285,11 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         }
 
         _diegeticUi.UpdateInput(input, worldLayer);
-        _promptRail.UpdateInput(input,screenLayer);
+    }
+
+    private bool IsPromptOpen()
+    {
+        return _savePrompt.IsOpen || _openPrompt.IsOpen || _spawnPrompt.IsOpen;
     }
 
     private void HandleCameraControls(ConsumableInput input, HitTestStack layer)
@@ -355,6 +328,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     {
         _promptRail.EarlyDraw(painter);
 
+        painter.Clear(Color.Blue.DimmedBy(0.95f));
         DrawBoard(painter);
         _diegeticUi.Draw(painter, _camera);
         _promptRail.Draw(painter);

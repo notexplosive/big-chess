@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ExplogineMonoGame;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
@@ -125,6 +126,26 @@ public class ChessBoard
 
         return result;
     }
+
+    public void Deserialize(SerializedBoard scenario)
+    {
+        ClearAllPieces();
+
+        foreach (var piece in scenario.Pieces)
+        {
+            AddPiece(piece.Deserialize());
+        }
+    }
+
+    private void ClearAllPieces()
+    {
+        var ids = _pieces.Values.Select(a => a.Id);
+
+        foreach (var id in ids)
+        {
+            DeletePiece(id);
+        }
+    }
 }
 
 [Serializable]
@@ -145,4 +166,14 @@ public class SerializedChessPiece
     
     [JsonProperty("color")]
     public PieceColor Color { get; set; }
+
+    public ChessPiece Deserialize()
+    {
+        return new ChessPiece
+        {
+            PieceType = Type,
+            Color = Color,
+            Position = Position.ToPoint()
+        };
+    }
 }

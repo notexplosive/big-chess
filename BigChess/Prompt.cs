@@ -13,7 +13,7 @@ public abstract class Prompt: IUpdateInputHook, IUpdateHook, IDrawHook
     
     public void UpdateInput(ConsumableInput input, HitTestStack hitTestStack)
     {
-        if (!IsActive)
+        if (!IsOpen)
         {
             return;
         }
@@ -29,7 +29,7 @@ public abstract class Prompt: IUpdateInputHook, IUpdateHook, IDrawHook
 
     public void Draw(Painter painter)
     {
-        if (!IsActive)
+        if (!IsOpen)
         {
             return;
         }
@@ -38,5 +38,5 @@ public abstract class Prompt: IUpdateInputHook, IUpdateHook, IDrawHook
     }
 
     protected abstract void DrawInternal(Painter painter);
-    public abstract bool IsActive { get; }
+    public abstract bool IsOpen { get; }
 }

@@ -102,5 +102,5 @@ public static class Constants
         return new Point(0, 1);
     }
 
-    public static IGuiTheme Theme { get; } = new SimpleGuiTheme(Color.White, Color.Cyan, Color.Transparent, new IndirectFont("engine/logo-font", 32), selectionColor: Color.Cyan);
+    public static IGuiTheme Theme { get; } = new SimpleGuiTheme(Color.White, Color.Black, Color.Transparent, new IndirectFont("engine/logo-font", 32), selectionColor: Color.Cyan);
 }

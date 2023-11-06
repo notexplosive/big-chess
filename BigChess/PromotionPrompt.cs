@@ -8,6 +8,7 @@ using ExplogineMonoGame.Data;
 using ExplogineMonoGame.Input;
 using ExplogineMonoGame.Layout;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 
 namespace BigChess;
 
@@ -56,7 +57,7 @@ public class PromotionPrompt : Prompt
                 .ToRectangleF());
     }
 
-    public override bool IsActive => _bufferedCallback != null;
+    public override bool IsOpen => _bufferedCallback != null;
 
     protected override void DrawInternal(Painter painter)
     {
@@ -126,8 +127,7 @@ public class PromotionPrompt : Prompt
         {
             if (_primedButton != null && _primedButton == _hoveredButton)
             {
-                _bufferedCallback?.Invoke(_primedButton.Value);
-                _bufferedCallback = null;
+                Execute(_primedButton.Value);
             }
 
             _primedButton = null;
@@ -137,6 +137,31 @@ public class PromotionPrompt : Prompt
         {
             _primedButton = _hoveredButton;
         }
+
+        var keys = new[] {Keys.D1, Keys.D2, Keys.D3, Keys.D4, Keys.D5, Keys.D6, Keys.D7, Keys.D8, Keys.D9};
+        for (var i = 0; i < keys.Length; i++)
+        {
+            var key = keys[i];
+
+            if (input.Keyboard.GetButton(key, true).WasPressed)
+            {
+                if (_pieceNames.IsValidIndex(i))
+                {
+                    var pieceType = NameToEnum(_pieceNames[i]);
+
+                    if (pieceType.HasValue)
+                    {
+                        Execute(pieceType.Value);
+                    }
+                }
+            }
+        }
+    }
+
+    private void Execute(PieceType value)
+    {
+        _bufferedCallback?.Invoke(value);
+        _bufferedCallback = null;
     }
 
     private PieceType? NameToEnum(string targetName)
