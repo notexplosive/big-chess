@@ -13,7 +13,7 @@ public class HotReloadCartridge : MultiCartridge
 
     protected override void BeforeUpdateInput(ConsumableInput input, HitTestStack hitTestStack)
     {
-        if (input.Keyboard.Modifiers.Control && input.Keyboard.GetButton(Keys.R, true).WasPressed)
+        if (Client.Debug.IsPassiveOrActive && input.Keyboard.Modifiers.Control && input.Keyboard.GetButton(Keys.R, true).WasPressed)
         {
 
             CurrentCartridge?.Unload();
