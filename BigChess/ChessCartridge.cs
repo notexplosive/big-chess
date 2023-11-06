@@ -6,6 +6,7 @@ using ExplogineMonoGame.AssetManagement;
 using ExplogineMonoGame.Cartridges;
 using ExplogineMonoGame.Data;
 using ExplogineMonoGame.Input;
+using ExplogineMonoGame.Rails;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -27,15 +28,16 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     private readonly PromotionPrompt _spawnPrompt;
     private readonly UiState _uiState;
     private bool _isEditMode;
+    private readonly Rail _promptRail = new();
 
     public ChessCartridge(IRuntime runtime) : base(runtime)
     {
         _scenarioFiles = Client.Debug.RepoFileSystem.GetDirectory("Scenarios");
         _assets = new Assets();
         _gameState = new ChessGameState();
-        _input = new ChessInput(_gameState);
+        _uiState = new UiState(_gameState);
+        _input = new ChessInput(_uiState);
         _board = new ChessBoard(_gameState);
-        _uiState = new UiState();
         _diegeticUi = new DiegeticUi(_uiState, _board, _assets, _gameState, _input);
         _spawnPrompt = new PromotionPrompt(_gameState, runtime, _assets, true, new List<string>
         {
@@ -54,6 +56,11 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             nameof(PieceType.Rook)
         });
         _savePrompt = new SavePrompt(runtime);
+
+        _promptRail.Add(_savePrompt);
+        _promptRail.Add(_promotionPrompt);
+        _promptRail.Add(_spawnPrompt);
+        
         _camera = new Camera(Constants.RenderResolution.ToRectangleF(), Constants.RenderResolution);
 
         _board.AddPiece(new ChessPiece
@@ -170,8 +177,6 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
                     _board.MovePiece(new ChessMove(piece.Value, position));
                 }
             }
-
-            _diegeticUi.DropDraggedPiece(position);
         }
         else
         {
@@ -179,7 +184,6 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             if (move != null)
             {
                 _board.MovePiece(move);
-                _diegeticUi.DropDraggedPiece(position);
                 _uiState.SelectedPiece = null;
             }
             else
@@ -312,9 +316,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         }
 
         _diegeticUi.UpdateInput(input, worldLayer);
-        _promotionPrompt.UpdateInput(input, screenLayer);
-        _spawnPrompt.UpdateInput(input, screenLayer);
-        _savePrompt.UpdateInput(input, screenLayer);
+        _promptRail.UpdateInput(input,screenLayer);
     }
 
     private void HandleCameraControls(ConsumableInput input, HitTestStack layer)
@@ -346,20 +348,16 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     public override void Update(float dt)
     {
         _diegeticUi.Update(dt);
-        _promotionPrompt.Update(dt);
-        _spawnPrompt.Update(dt);
-        _savePrompt.Update(dt);
+        _promptRail.Update(dt);
     }
 
     public override void Draw(Painter painter)
     {
-        _savePrompt.EarlyDraw(painter);
+        _promptRail.EarlyDraw(painter);
 
         DrawBoard(painter);
         _diegeticUi.Draw(painter, _camera);
-        _promotionPrompt.Draw(painter);
-        _spawnPrompt.Draw(painter);
-        _savePrompt.Draw(painter);
+        _promptRail.Draw(painter);
     }
 
     private void DrawBoard(Painter painter)

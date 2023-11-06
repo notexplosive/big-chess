@@ -8,24 +8,12 @@ public class ChessGameState
     private int? _promotingPieceId;
     public PieceColor CurrentTurn { get; private set; }
     public int PendingPromotionId => _promotingPieceId ?? -1;
-    public bool PlayerCanMovePieces => _playerIsActionable && ! _promotingPieceId.HasValue;
-    private bool _playerIsActionable = true;
 
     public event Action<ChessPiece>? PromotionRequested;
 
     public void NextTurn()
     {
         CurrentTurn = Constants.FlipColor(CurrentTurn);
-    }
-
-    public void StopInput()
-    {
-        _playerIsActionable = false;
-    }
-
-    public void RestoreInput()
-    {
-        _playerIsActionable = true;
     }
 
     public void OnPieceMoved(ChessMove move)

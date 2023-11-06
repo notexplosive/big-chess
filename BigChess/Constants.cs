@@ -17,7 +17,7 @@ public static class Constants
     
     public static Point RenderResolution => new(Constants.RenderWidth, Constants.RenderHeight);
     public static Point TotalBoardSizePixels => new(Constants.BoardLength * Constants.TileSize);
-    public static int SectionCount => 4;
+    public static int SectionCount => 5;
 
     public static IEnumerable<BoardRectangle> BoardRectangles()
     {

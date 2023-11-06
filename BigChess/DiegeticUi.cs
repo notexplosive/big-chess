@@ -11,9 +11,9 @@ namespace BigChess;
 public class DiegeticUi : IUpdateHook, IUpdateInputHook
 {
     private readonly Assets _assets;
+    private readonly UiState _uiState;
     private readonly ChessBoard _board;
     private readonly ChessInput _chessInput;
-    private readonly ChessGameState _gameState;
     private readonly Dictionary<int, PieceRenderer> _pieceRenderers = new();
     private readonly ProposedMoveSquare _proposedMoveSquare;
     private readonly List<TargetSquare> _targetSquares = new();
@@ -26,11 +26,11 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     {
         _proposedMoveSquare = AnimatedObjects.Add(new ProposedMoveSquare());
 
+        _uiState = uiState;
         _board = board;
         _assets = assets;
-        _gameState = gameState;
         _chessInput = chessInput;
-        uiState.SelectionChanged += SelectionChanged;
+        _uiState.SelectionChanged += SelectionChanged;
         _board.PieceAdded += OnPieceAdded;
         _board.PieceCaptured += OnPieceCaptured;
         _board.PieceDeleted += OnPieceDeleted;
@@ -103,7 +103,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     {
         if (_pieceRenderers.TryGetValue(move.PieceBeforeMove.Id, out var result))
         {
-            result.AnimateMove(_tween, move.PieceBeforeMove, move.Position, _gameState);
+            result.AnimateMove(_tween, move.PieceBeforeMove, move.Position, _uiState);
         }
     }
 
@@ -175,18 +175,9 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
         _proposedMoveSquare.Visible = false;
     }
 
-    public void DropDraggedPiece(Point destination)
-    {
-        if (_draggedPiece != null)
-        {
-            _draggedPiece.AnimateDropAt(destination);
-        }
-
-        _draggedPiece = null;
-    }
-
     public void ClearDrag()
     {
+        // ClearDrag gets called multiple times sometimes, this avoids that problem
         if (_draggedPiece != null)
         {
             var piece = _draggedPiece.GetPiece();

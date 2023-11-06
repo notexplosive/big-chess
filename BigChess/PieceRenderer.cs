@@ -27,6 +27,7 @@ public class PieceRenderer : AnimatedObject
     private bool _isDrawingPieceExactly = true;
     private readonly SequenceTween _isolatedTween = new();
     private bool _isFadingOut;
+    private bool _isMoving;
 
     public PieceRenderer(ChessPiece originalPiece, ChessBoard board, Assets assets)
     {
@@ -102,13 +103,12 @@ public class PieceRenderer : AnimatedObject
         _isolatedTween.Add(_scale.TweenTo(1f, 0.1f, Ease.QuadFastSlow));
     }
 
-    public void AnimateMove(SequenceTween tween, ChessPiece piece, Point newPosition, ChessGameState gameState)
+    public void AnimateMove(SequenceTween tween, ChessPiece piece, Point newPosition, UiState uiState)
     {
         _isDrawingPieceExactly = false;
-        tween.Add(new CallbackTween(() =>
-        {
-            gameState.StopInput();
-        }));
+        _isMoving = true;
+        
+        tween.Add(new CallbackTween(uiState.StopInput));
 
         var duration =
             ((_fakePiecePosition.Value - Constants.ToWorldPosition(newPosition) +
@@ -135,7 +135,8 @@ public class PieceRenderer : AnimatedObject
         tween.Add(new CallbackTween(() =>
         {
             _isDrawingPieceExactly = true;
-            gameState.RestoreInput();
+            _isMoving = false;
+            uiState.RestoreInput();
         }));
     }
 
@@ -145,14 +146,24 @@ public class PieceRenderer : AnimatedObject
 
         var duration = 0.15f;
         _isolatedTween.Add(
-            new MultiplexTween()
-                .AddChannel(_fakePiecePosition.TweenTo(Constants.ToWorldPosition(destination), duration / 4f,
-                    Ease.Linear))
-                .AddChannel(
-                    new SequenceTween()
-                        .Add(_scale.TweenTo(0.9f, duration, Ease.QuadSlowFast))
-                        .Add(_scale.TweenTo(1f, duration, Ease.QuadSlowFast))
-                )
+            new DynamicTween(() =>
+            {
+                var tween = new MultiplexTween()
+                    .AddChannel(
+                        new SequenceTween()
+                            .Add(_scale.TweenTo(0.9f, duration, Ease.QuadSlowFast))
+                            .Add(_scale.TweenTo(1f, duration, Ease.QuadSlowFast))
+                    );
+
+                // If we're already moving we should not mess with the position
+                if (!_isMoving)
+                {
+                    tween.AddChannel(_fakePiecePosition.TweenTo(Constants.ToWorldPosition(destination), duration / 4f,
+                        Ease.Linear));
+                }
+
+                return tween;
+            })
         );
 
         _isolatedTween.Add(new CallbackTween(() => { _isDrawingPieceExactly = true; }));

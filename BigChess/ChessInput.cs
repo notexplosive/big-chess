@@ -7,14 +7,14 @@ namespace BigChess;
 
 public class ChessInput
 {
-    private readonly ChessGameState _gameState;
     private Point? _hoveredSquare;
     private bool _isDragging;
     private MouseButton? _primedButton;
+    private readonly UiState _uiState;
 
-    public ChessInput(ChessGameState gameState)
+    public ChessInput(UiState uiState)
     {
-        _gameState = gameState;
+        _uiState = uiState;
     }
 
     public Point? PrimedSquare { get; private set; }
@@ -34,7 +34,7 @@ public class ChessInput
             _hoveredSquare = gridPosition;
         }
 
-        if (!_gameState.PlayerCanMovePieces)
+        if (!_uiState.PlayerCanMovePieces)
         {
             return;
         }
@@ -67,6 +67,7 @@ public class ChessInput
 
                 if (_isDragging)
                 {
+                    _isDragging = false;
                     DragFinished?.Invoke(gridPosition);
                 }
             }
@@ -103,6 +104,7 @@ public class ChessInput
     {
         if (input.Mouse.GetButton(MouseButton.Left).WasReleased && _isDragging)
         {
+            _isDragging = false;
             DragCancelled?.Invoke();
             DragFinished?.Invoke(null);
         }
