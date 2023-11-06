@@ -75,7 +75,9 @@ public abstract class ButtonListPrompt : Prompt, IEarlyDrawHook
         painter.EndSpriteBatch();
     }
 
-    protected void GenerateButtons(List<string> items, Action<string> doItem, Func<string,string> getName)
+    protected record ButtonTemplate(string Name, Action Execute);
+
+    protected void GenerateButtons(List<ButtonTemplate> items)
     {
         var buttonSize = new Vector2(500, 100);
         var boundaries = new RectangleF();
@@ -86,7 +88,7 @@ public abstract class ButtonListPrompt : Prompt, IEarlyDrawHook
         foreach (var item in items)
         {
             buttonRect = buttonRect.Moved(new Vector2(0, buttonSize.Y + 20));
-            _gui.Button(buttonRect, getName(item), Depth.Middle, () => { doItem(item); });
+            _gui.Button(buttonRect, item.Name, Depth.Middle, item.Execute);
         }
 
         boundaries = RectangleF.Union(boundaries, buttonRect);

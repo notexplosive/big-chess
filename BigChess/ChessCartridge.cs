@@ -59,7 +59,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         });
         _savePrompt = new SavePrompt(runtime);
         _openPrompt = new OpenPrompt(runtime);
-        _editorPrompt = new EditorPrompt(runtime);
+        _editorPrompt = new EditorPrompt(runtime, _board);
 
         _promptRail.Add(_savePrompt);
         _promptRail.Add(_promotionPrompt);

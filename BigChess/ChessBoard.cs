@@ -24,6 +24,12 @@ public class ChessBoard
     public event Action<ChessPiece>? PieceCaptured;
     public event Action<ChessPiece>? PieceDeleted;
 
+    public IEnumerable<int> GetAllIds()
+    {
+        return _pieces.Keys;
+    }
+    
+
     public ChessPiece? GetPieceAt(Point position)
     {
         foreach (var piece in _pieces.Values)
@@ -105,7 +111,7 @@ public class ChessBoard
         }
     }
 
-    private void DeletePiece(int id)
+    public void DeletePiece(int id)
     {
         if (_pieces.ContainsKey(id))
         {

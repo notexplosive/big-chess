@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using ExplogineCore;
 using ExplogineMonoGame;
@@ -32,7 +33,15 @@ public class OpenPrompt : ButtonListPrompt
     private void Refresh()
     {
         var files = OpenPrompt.ScenariosFolder.GetFilesAt(".");
-        GenerateButtons(files, OpenLevel, file=>new FileInfo(file).Name);
+
+        var buttonTemplates = new List<ButtonTemplate>();
+
+        foreach (var file in files)
+        {
+            buttonTemplates.Add(new ButtonTemplate(new FileInfo(file).Name, ()=> OpenLevel(file)));
+        }
+
+        GenerateButtons(buttonTemplates);
     }
 
     
