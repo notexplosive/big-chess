@@ -1,12 +1,18 @@
 using System;
-using Microsoft.Xna.Framework;
+using ExplogineMonoGame;
 
 namespace BigChess;
 
 public class ChessGameState
 {
-    private int? _promotingPieceId;
+    private readonly ChessBoard _board;
     private PieceColor _currentTurn;
+    private int? _promotingPieceId;
+
+    public ChessGameState(ChessBoard board)
+    {
+        _board = board;
+    }
 
     public PieceColor CurrentTurn
     {
@@ -28,8 +34,16 @@ public class ChessGameState
         CurrentTurn = Constants.OppositeColor(CurrentTurn);
     }
 
-    public void OnPieceMoved(ChessMove move)
+    public void RequestMovePiece(ChessMove move)
     {
+        if (PendingPromotionId != -1)
+        {
+            Client.Debug.LogWarning("Attempted to move during pending promotion");
+            return;
+        }
+
+        _board.ForceMovePiece(move);
+        
         var piece = move.PieceAfterMove;
         if (piece.PieceType == PieceType.Pawn)
         {
@@ -41,8 +55,9 @@ public class ChessGameState
         }
     }
 
-    public void OnPiecePromoted(ChessPiece piece)
+    public void PromotePiece(int id, PieceType pieceType)
     {
+        _board.Promote(id, pieceType);
         _promotingPieceId = null;
     }
 }

@@ -7,17 +7,12 @@ namespace BigChess;
 
 public class ChessInput
 {
+    private int _blockInputSemaphore;
     private Point? _hoveredSquare;
     private bool _isDragging;
     private MouseButton? _primedButton;
-    private readonly UiState _uiState;
 
-    public ChessInput(UiState uiState)
-    {
-        _uiState = uiState;
-    }
-
-    public Point? PrimedSquare { get; private set; }
+    private Point? PrimedSquare { get; set; }
 
     public event Action<Point, Point>? DragSucceeded;
     public event Action? DragCancelled;
@@ -25,6 +20,19 @@ public class ChessInput
     public event Action<Point, MouseButton>? SquareClicked;
     public event Action<Point>? SquareHovered;
     public event Action<Point>? DragInitiated;
+
+    public bool PlayerCanMovePieces => _blockInputSemaphore == 0;
+
+    public void StopInput()
+    {
+        _blockInputSemaphore++;
+    }
+
+    public void RestoreInput()
+    {
+        _blockInputSemaphore--;
+        _blockInputSemaphore = Math.Max(_blockInputSemaphore, 0);
+    }
 
     public void SetHoveredSquare(ConsumableInput input, Point gridPosition)
     {
@@ -34,22 +42,22 @@ public class ChessInput
             _hoveredSquare = gridPosition;
         }
 
-        if (!_uiState.PlayerCanMovePieces)
+        if (!PlayerCanMovePieces)
         {
             return;
         }
-        
+
         if (input.Mouse.GetButton(MouseButton.Left).WasPressed)
         {
             input.Mouse.Consume(MouseButton.Left);
-            
+
             PrimedSquare = gridPosition;
             _primedButton = MouseButton.Left;
             _isDragging = true;
 
             DragInitiated?.Invoke(gridPosition);
         }
-        
+
         if (input.Mouse.GetButton(MouseButton.Left).WasReleased)
         {
             input.Mouse.Consume(MouseButton.Left);

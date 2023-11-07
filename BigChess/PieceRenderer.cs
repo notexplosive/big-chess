@@ -103,12 +103,15 @@ public class PieceRenderer : AnimatedObject
         _isolatedTween.Add(_scale.TweenTo(1f, 0.1f, Ease.QuadFastSlow));
     }
 
-    public void AnimateMove(SequenceTween tween, ChessPiece piece, Point newPosition, UiState uiState)
+    public void AnimateMove(SequenceTween tween, ChessPiece piece, Point newPosition, ChessInput input)
     {
         _isDrawingPieceExactly = false;
         _isMoving = true;
         
-        tween.Add(new CallbackTween(uiState.StopInput));
+        tween.Add(new CallbackTween(()=>
+        {
+            input.StopInput();
+        }));
 
         var duration =
             ((_fakePiecePosition.Value - Constants.ToWorldPosition(newPosition) +
@@ -136,7 +139,7 @@ public class PieceRenderer : AnimatedObject
         {
             _isDrawingPieceExactly = true;
             _isMoving = false;
-            uiState.RestoreInput();
+            input.RestoreInput();
         }));
     }
 
@@ -148,7 +151,7 @@ public class PieceRenderer : AnimatedObject
         _isolatedTween.Add(
             new DynamicTween(() =>
             {
-                var tween = new MultiplexTween()
+                var subTween = new MultiplexTween()
                     .AddChannel(
                         new SequenceTween()
                             .Add(_scale.TweenTo(0.9f, duration, Ease.QuadSlowFast))
@@ -158,22 +161,19 @@ public class PieceRenderer : AnimatedObject
                 // If we're already moving we should not mess with the position
                 if (!_isMoving)
                 {
-                    tween.AddChannel(_fakePiecePosition.TweenTo(Constants.ToWorldPosition(destination), duration / 4f,
+                    subTween.AddChannel(_fakePiecePosition.TweenTo(Constants.ToWorldPosition(destination), duration / 4f,
                         Ease.Linear));
                 }
 
-                return tween;
+                return subTween;
             })
         );
 
         _isolatedTween.Add(new CallbackTween(() => { _isDrawingPieceExactly = true; }));
     }
 
-    public void Drag(SequenceTween tween, Vector2 position)
+    public void Drag(Vector2 position)
     {
-        tween.SkipToEnd();
-        _isolatedTween.SkipToEnd();
-        
         _isDrawingPieceExactly = false;
         _fakePiecePosition.Value = position;
         _scale.Value = 1.2f;
@@ -218,5 +218,11 @@ public class PieceRenderer : AnimatedObject
         {
             Destroy();
         }
+    }
+
+    public void SkipTween(SequenceTween tween, ChessInput input)
+    {
+        tween.SkipToEnd();
+        _isolatedTween.SkipToEnd();
     }
 }

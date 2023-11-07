@@ -29,11 +29,11 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     public ChessCartridge(IRuntime runtime) : base(runtime)
     {
         _assets = new Assets();
-        _gameState = new ChessGameState();
-        _uiState = new UiState(_gameState);
-        _input = new ChessInput(_uiState);
-        var board = new ChessBoard(_gameState);
-        _diegeticUi = new DiegeticUi(_uiState, board, _assets, _gameState, _input);
+        var board = new ChessBoard();
+        _gameState = new ChessGameState(board);
+        _input = new ChessInput();
+        _uiState = new UiState();
+        _diegeticUi = new DiegeticUi(_uiState, board, _assets, _input);
         var spawnPrompt = new PromotionPrompt(_gameState, runtime, _assets, true, new List<string>
         {
             nameof(PieceType.Pawn),

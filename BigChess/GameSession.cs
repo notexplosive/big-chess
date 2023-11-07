@@ -28,7 +28,7 @@ public class GameSession : Session
     
     private void RequestPromotion(ChessPiece piece)
     {
-        _promotionPrompt.Request(type => { _board.Promote(_gameState.PendingPromotionId, type); });
+        _promotionPrompt.Request(type => { _gameState.PromotePiece(_gameState.PendingPromotionId, type); });
     }
 
     public override void DragInitiated(Point position)
@@ -71,7 +71,7 @@ public class GameSession : Session
         var move = GetSelectedPieceValidMoveTo(position);
         if (move != null)
         {
-            _board.MovePiece(move);
+            _gameState.RequestMovePiece(move);
             _uiState.SelectedPiece = null;
         }
         else
@@ -106,7 +106,7 @@ public class GameSession : Session
         var move = GetSelectedPieceValidMoveTo(position);
         if (move != null)
         {
-            _board.MovePiece(move);
+            _gameState.RequestMovePiece(move);
             _uiState.SelectedPiece = null;
         }
         else

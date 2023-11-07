@@ -11,10 +11,8 @@ public class ChessBoard
 {
     private readonly Dictionary<int, ChessPiece> _pieces = new();
 
-    public ChessBoard(ChessGameState gameState)
+    public ChessBoard()
     {
-        PieceMoved += gameState.OnPieceMoved;
-        PiecePromoted += gameState.OnPiecePromoted;
     }
 
     public int IdPool { get; set; }
@@ -43,7 +41,7 @@ public class ChessBoard
         return null;
     }
 
-    public void MovePiece(ChessMove move)
+    public void ForceMovePiece(ChessMove move)
     {
         var id = move.PieceBeforeMove.Id;
         var currentOccupant = GetPieceAt(move.Position);
@@ -57,7 +55,7 @@ public class ChessBoard
 
         if (move.NextMove != null)
         {
-            MovePiece(move.NextMove);
+            ForceMovePiece(move.NextMove);
         }
     }
 
@@ -99,7 +97,7 @@ public class ChessBoard
 
     public void Promote(int id, PieceType pieceType)
     {
-        if (_pieces.TryGetValue(id, out var oldPiece))
+        if (TryFindId(id, out var oldPiece))
         {
             DeletePiece(id);
             var piece = AddPiece(oldPiece with {PieceType = pieceType});
@@ -109,6 +107,11 @@ public class ChessBoard
         {
             Client.Debug.LogWarning($"Tried to promote {id} but it does not exist");
         }
+    }
+
+    public bool TryFindId(int id, out ChessPiece piece)
+    {
+        return _pieces.TryGetValue(id, out piece);
     }
 
     public void DeletePiece(int id)

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using ExplogineMonoGame;
 using ExplogineMonoGame.AssetManagement;
 using ExplogineMonoGame.Data;
@@ -22,7 +23,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     private PieceRenderer? _draggedPiece;
     private SelectedSquare? _selection;
 
-    public DiegeticUi(UiState uiState, ChessBoard board, Assets assets, ChessGameState gameState, ChessInput chessInput)
+    public DiegeticUi(UiState uiState, ChessBoard board, Assets assets, ChessInput chessInput)
     {
         _proposedMoveSquare = AnimatedObjects.Add(new ProposedMoveSquare());
 
@@ -59,8 +60,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     {
         if (_draggedPiece != null)
         {
-            _draggedPiece.Drag(_tween,
-                input.Mouse.Position(hitTestStack.WorldMatrix) - new Vector2(Constants.TileSize) / 2f);
+            _draggedPiece.Drag(input.Mouse.Position(hitTestStack.WorldMatrix) - new Vector2(Constants.TileSize) / 2f);
         }
     }
 
@@ -103,7 +103,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     {
         if (_pieceRenderers.TryGetValue(move.PieceBeforeMove.Id, out var result))
         {
-            result.AnimateMove(_tween, move.PieceBeforeMove, move.Position, _uiState);
+            result.AnimateMove(_tween, move.PieceBeforeMove, move.Position, _chessInput);
         }
     }
 
@@ -168,6 +168,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     public void BeginDrag(ChessPiece piece)
     {
         _draggedPiece = _pieceRenderers[piece.Id];
+        _draggedPiece.SkipTween(_tween, _chessInput);
     }
 
     private void OnDragFinished(Point? position)

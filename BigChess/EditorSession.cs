@@ -67,7 +67,7 @@ public class EditorSession : Session
 
             if (piece.HasValue)
             {
-                _board.MovePiece(new ChessMove(piece.Value, position));
+                _board.ForceMovePiece(new ChessMove(piece.Value, position));
             }
         }
     }
