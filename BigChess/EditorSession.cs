@@ -74,6 +74,7 @@ public class EditorSession : Session
 
     public override void DragFinished(Point? position)
     {
+        _diegeticUi.ClearDrag();
     }
 
     public override void UpdateInput(ConsumableInput input, HitTestStack screenLayer)

@@ -45,19 +45,28 @@ public class ChessGameState
         _board.ForceMovePiece(move);
         
         var piece = move.PieceAfterMove;
-        if (piece.PieceType == PieceType.Pawn)
+        if (piece.PieceType == PieceType.Pawn && !Constants.IsWithinBoard(piece.Position + Constants.Forward(piece.Color)))
         {
-            if (!Constants.IsWithinBoard(piece.Position + Constants.Forward(piece.Color)))
-            {
-                _promotingPieceId = piece.Id;
-                PromotionRequested?.Invoke(piece);
-            }
+            _promotingPieceId = piece.Id;
+            PromotionRequested?.Invoke(piece);
+        }
+        else
+        {
+            CompleteAction();
         }
     }
 
-    public void PromotePiece(int id, PieceType pieceType)
+    public void FinishPromotePiece(int id, PieceType pieceType)
     {
         _board.Promote(id, pieceType);
         _promotingPieceId = null;
+        
+        CompleteAction();
+    }
+
+    private void CompleteAction()
+    {
+        // todo: action points
+        NextTurn();
     }
 }

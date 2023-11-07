@@ -28,7 +28,7 @@ public class GameSession : Session
     
     private void RequestPromotion(ChessPiece piece)
     {
-        _promotionPrompt.Request(type => { _gameState.PromotePiece(_gameState.PendingPromotionId, type); });
+        _promotionPrompt.Request(type => { _gameState.FinishPromotePiece(_gameState.PendingPromotionId, type); });
     }
 
     public override void DragInitiated(Point position)
