@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ExplogineMonoGame;
 using ExplogineMonoGame.Data;
@@ -103,4 +104,14 @@ public static class Constants
     }
 
     public static IGuiTheme Theme { get; } = new SimpleGuiTheme(Color.White, Color.Black, Color.Transparent, new IndirectFont("engine/logo-font", 32), selectionColor: Color.Cyan);
+
+    public static Color PieceColorToRgb(PieceColor color)
+    {
+        return color switch
+        {
+            PieceColor.White => Color.White,
+            PieceColor.Black => Color.Black,
+            _ => Color.Red
+        };
+    }
 }

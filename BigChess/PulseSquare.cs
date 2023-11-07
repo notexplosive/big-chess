@@ -30,7 +30,7 @@ public class PulseSquare : AnimatedObject
         painter.DrawLineRectangle(rectangle, new LineDrawSettings {Thickness = _thickness, Color = Color.Goldenrod});
     }
 
-    public override void DrawUnscaled(Painter painter, Camera camera)
+    public override void DrawUnscaled(Painter painter, Matrix canvasToScreen)
     {
         
     }

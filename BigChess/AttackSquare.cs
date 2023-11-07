@@ -44,7 +44,7 @@ public class AttackSquare : TargetSquare
         painter.DrawRectangle(shapeBounds.MovedByOrigin(DrawOrigin.Center), new DrawSettings {Color = Color.Red.WithMultipliedOpacity(_opacity), Angle = _angle + MathF.PI/4f, Origin = DrawOrigin.Center});
     }
 
-    public override void DrawUnscaled(Painter painter, Camera camera)
+    public override void DrawUnscaled(Painter painter, Matrix canvasToScreen)
     {
     }
 }

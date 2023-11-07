@@ -33,10 +33,10 @@ public class ProposedMoveSquare : AnimatedObject
         
     }
 
-    public override void DrawUnscaled(Painter painter, Camera camera)
+    public override void DrawUnscaled(Painter painter, Matrix canvasToScreen)
     {
         var rectangle = Constants.PixelRectangle(_position).Inflated(_expandAmount, _expandAmount);
-        painter.DrawRectangle(RectangleF.Transform(rectangle, camera.CanvasToScreen), new DrawSettings {Depth = Depth.Front + 100, Color = Color.White.WithMultipliedOpacity(_opacity)});
+        painter.DrawRectangle(RectangleF.Transform(rectangle, canvasToScreen), new DrawSettings {Depth = Depth.Front + 100, Color = Color.White.WithMultipliedOpacity(_opacity)});
     }
 
     public override void Update(float dt)
@@ -76,10 +76,10 @@ public class SelectedSquare : AnimatedObject
         
     }
 
-    public override void DrawUnscaled(Painter painter, Camera camera)
+    public override void DrawUnscaled(Painter painter, Matrix canvasToScreen)
     {
         var rectangle = Constants.PixelRectangle(_position).Inflated(_expandAmount, _expandAmount);
-        painter.DrawLineRectangle(RectangleF.Transform(rectangle, camera.CanvasToScreen), new LineDrawSettings {Depth = Depth.Front + 100, Thickness = _thickness, Color = Color.LightBlue.WithMultipliedOpacity(_opacity)});
+        painter.DrawLineRectangle(RectangleF.Transform(rectangle, canvasToScreen), new LineDrawSettings {Depth = Depth.Front + 100, Thickness = _thickness, Color = Color.LightBlue.WithMultipliedOpacity(_opacity)});
     }
 
     public override void Update(float dt)

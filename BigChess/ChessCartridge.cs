@@ -18,9 +18,9 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     private readonly Assets _assets;
     private readonly Camera _camera;
     private readonly DiegeticUi _diegeticUi;
+    private readonly OverlayUi _overlayUi;
     private readonly EditorSession _editorSession;
     private readonly GameSession _gameSession;
-    private readonly ChessGameState _gameState;
     private readonly ChessInput _input;
     private readonly Rail _promptRail = new();
     private readonly UiState _uiState;
@@ -30,11 +30,12 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     {
         _assets = new Assets();
         var board = new ChessBoard();
-        _gameState = new ChessGameState(board);
+        var gameState = new ChessGameState(board);
         _input = new ChessInput();
         _uiState = new UiState();
         _diegeticUi = new DiegeticUi(_uiState, board, _assets, _input);
-        var spawnPrompt = new PromotionPrompt(_gameState, runtime, _assets, true, new List<string>
+        _overlayUi = new OverlayUi(gameState, runtime);
+        var spawnPrompt = new PromotionPrompt(gameState, runtime, _assets, true, new List<string>
         {
             nameof(PieceType.Pawn),
             nameof(PieceType.Queen),
@@ -43,7 +44,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             nameof(PieceType.Rook),
             nameof(PieceType.King)
         });
-        var promotionPrompt = new PromotionPrompt(_gameState, runtime, _assets, false, new List<string>
+        var promotionPrompt = new PromotionPrompt(gameState, runtime, _assets, false, new List<string>
         {
             nameof(PieceType.Queen),
             nameof(PieceType.Bishop),
@@ -60,8 +61,8 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             (int) (Constants.TotalBoardSizePixels.X * runtime.Window.RenderResolution.AspectRatio() * 1.5f),
             _camera.CenterPosition);
 
-        _gameSession = new GameSession(_gameState, _uiState, board, _diegeticUi, promotionPrompt);
-        _editorSession = new EditorSession(_gameState, board, _diegeticUi, spawnPrompt, savePrompt, openPrompt,
+        _gameSession = new GameSession(gameState, _uiState, board, _diegeticUi, promotionPrompt);
+        _editorSession = new EditorSession(gameState, board, _diegeticUi, spawnPrompt, savePrompt, openPrompt,
             editorCommandsPrompt);
 
         _promptRail.Add(savePrompt);
@@ -74,7 +75,6 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         _input.DragInitiated += DragInitiated;
         _input.DragSucceeded += DragSucceeded;
         _input.DragFinished += DragFinished;
-        _gameState.TurnChanged += AnnounceTurn;
     }
 
     public override CartridgeConfig CartridgeConfig => new(Constants.RenderResolution, SamplerState.AnisotropicWrap);
@@ -82,11 +82,6 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     public void OnHotReload()
     {
         Client.Debug.Log("Hot Reloaded!");
-    }
-
-    private void AnnounceTurn(PieceColor color)
-    {
-        Client.Debug.Log($"{color} to move");
     }
 
     private void DragFinished(Point? position)
@@ -160,7 +155,9 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         }
 
         var worldLayer = screenLayer.AddLayer(_camera.ScreenToCanvas, Depth.Middle);
-        _promptRail.UpdateInput(input, screenLayer);
+        var overlayLayer = screenLayer.AddLayer(Matrix.Identity, Depth.Middle - 100);
+        var promptsLayer = screenLayer.AddLayer(Matrix.Identity, Depth.Middle - 200);
+        
         HandleCameraControls(input, worldLayer);
 
         worldLayer.AddInfiniteZone(Depth.Back, () => _input.OnHoverVoid(input));
@@ -169,7 +166,9 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             worldLayer.AddZone(boardRectangle.PixelRect, Depth.Middle,
                 () => { _input.SetHoveredSquare(input, boardRectangle.GridPosition); });
         }
-
+        
+        _overlayUi.UpdateInput(input, overlayLayer);
+        _promptRail.UpdateInput(input, promptsLayer);
         _diegeticUi.UpdateInput(input, worldLayer);
     }
 
@@ -202,6 +201,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     public override void Update(float dt)
     {
         _diegeticUi.Update(dt);
+        _overlayUi.Update(dt);
         _promptRail.Update(dt);
     }
 
@@ -211,7 +211,8 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
 
         painter.Clear(Color.Blue.DimmedBy(0.95f));
         DrawBoard(painter);
-        _diegeticUi.Draw(painter, _camera);
+        _diegeticUi.Draw(painter, _camera.CanvasToScreen);
+        _overlayUi.Draw(painter);
         _promptRail.Draw(painter);
     }
 

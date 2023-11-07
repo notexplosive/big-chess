@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ExplogineMonoGame;
+using Microsoft.Xna.Framework;
 
 namespace BigChess;
 
@@ -30,9 +31,9 @@ public class AnimatedObjectCollection
         }
     }
 
-    public void DrawAll(Painter painter, Camera camera)
+    public void DrawAll(Painter painter, Matrix canvasToScreen)
     {
-        painter.BeginSpriteBatch(camera.CanvasToScreen);
+        painter.BeginSpriteBatch(canvasToScreen);
         foreach (var item in _content)
         {
             if (item.Visible)
@@ -48,7 +49,7 @@ public class AnimatedObjectCollection
         {
             if (item.Visible)
             {
-                item.DrawUnscaled(painter, camera);
+                item.DrawUnscaled(painter, canvasToScreen);
             }
         }
 

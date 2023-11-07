@@ -55,7 +55,7 @@ public class PromotionFanfare : AnimatedObject
             });
     }
 
-    public override void DrawUnscaled(Painter painter, Camera camera)
+    public override void DrawUnscaled(Painter painter, Matrix canvasToScreen)
     {
     }
 

@@ -25,7 +25,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
 
     public DiegeticUi(UiState uiState, ChessBoard board, Assets assets, ChessInput chessInput)
     {
-        _proposedMoveSquare = AnimatedObjects.Add(new ProposedMoveSquare());
+        _proposedMoveSquare = _animatedObjects.Add(new ProposedMoveSquare());
 
         _uiState = uiState;
         _board = board;
@@ -41,7 +41,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
         _chessInput.DragFinished += OnDragFinished;
     }
 
-    public AnimatedObjectCollection AnimatedObjects { get; } = new();
+    private readonly AnimatedObjectCollection _animatedObjects = new();
     public int? DraggedId => _draggedPiece?.PieceId;
 
     public void Update(float dt)
@@ -53,7 +53,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
             _tween.Clear();
         }
 
-        AnimatedObjects.UpdateAll(dt);
+        _animatedObjects.UpdateAll(dt);
     }
 
     public void UpdateInput(ConsumableInput input, HitTestStack hitTestStack)
@@ -64,13 +64,13 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
         }
     }
 
-    public void Draw(Painter painter, Camera camera)
+    public void Draw(Painter painter, Matrix canvasToScreen)
     {
-        AnimatedObjects.DrawAll(painter, camera);
+        _animatedObjects.DrawAll(painter, canvasToScreen);
 
         if (_draggedPiece != null)
         {
-            painter.BeginSpriteBatch(camera.CanvasToScreen);
+            painter.BeginSpriteBatch(canvasToScreen);
             _draggedPiece.DrawScaled(painter);
             painter.EndSpriteBatch();
         }
@@ -95,7 +95,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
         {
             result.AnimatePromote();
 
-            AnimatedObjects.Add(new PromotionFanfare(piece, _assets));
+            _animatedObjects.Add(new PromotionFanfare(piece, _assets));
         }
     }
 
@@ -125,7 +125,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
 
     private void OnPieceAdded(ChessPiece piece)
     {
-        _pieceRenderers.Add(piece.Id, AnimatedObjects.Add(new PieceRenderer(piece, _board, _assets)));
+        _pieceRenderers.Add(piece.Id, _animatedObjects.Add(new PieceRenderer(piece, _board, _assets)));
     }
 
     private void SelectionChanged(ChessPiece? piece)
@@ -135,20 +135,20 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
         if (piece.HasValue)
         {
             var startingPosition = piece.Value.Position;
-            _selection = AnimatedObjects.Add(new SelectedSquare(startingPosition));
+            _selection = _animatedObjects.Add(new SelectedSquare(startingPosition));
 
             foreach (var landingPosition in piece.Value.GetValidMoves(_board))
             {
                 if (_board.GetPieceAt(landingPosition.Position) != null)
                 {
                     _targetSquares.Add(
-                        AnimatedObjects.Add(new AttackSquare(startingPosition, landingPosition.Position)));
+                        _animatedObjects.Add(new AttackSquare(startingPosition, landingPosition.Position)));
                 }
 
                 if (Constants.IsWithinBoard(landingPosition.Position))
                 {
                     var delay = (startingPosition.ToVector2() - landingPosition.Position.ToVector2()).Length() / 100f;
-                    _targetSquares.Add(AnimatedObjects.Add(new MoveSquare(landingPosition.Position, delay)));
+                    _targetSquares.Add(_animatedObjects.Add(new MoveSquare(landingPosition.Position, delay)));
                 }
             }
         }
