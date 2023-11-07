@@ -10,10 +10,12 @@ public class OverlayUi : IUpdateHook, IUpdateInputHook, IDrawHook
 {
     private readonly IRuntime _runtime;
     private readonly SequenceTween _tween = new();
+    private readonly CurrentTurnIndicator _currentTurnIndicator;
 
     public OverlayUi(ChessGameState gameState, IRuntime runtime)
     {
         _runtime = runtime;
+        _currentTurnIndicator = _animatedObjects.Add(new CurrentTurnIndicator(gameState, runtime));
         gameState.TurnChanged += AnnounceTurn;
     }
 
