@@ -9,7 +9,7 @@ namespace BigChess;
 
 public class AttackSquare : TargetSquare
 {
-    private readonly TweenableFloat _expandAmount = new(Constants.TileSize / 2f);
+    private readonly TweenableFloat _expandAmount = new(Constants.TileSizePixels / 2f);
     private readonly TweenableFloat _opacity = new(1);
     private readonly TweenableFloat _angle = new(0);
 
@@ -19,10 +19,10 @@ public class AttackSquare : TargetSquare
         Tween
             .Add(
                 new MultiplexTween()
-                    .AddChannel(_expandAmount.TweenTo(-Constants.TileSize / 8f, 0.25f, Ease.CubicSlowFast))
+                    .AddChannel(_expandAmount.TweenTo(-Constants.TileSizePixels / 8f, 0.25f, Ease.CubicSlowFast))
                     .AddChannel(_opacity.TweenTo(0.25f, 0.25f, Ease.Linear))
             )
-            .Add(_expandAmount.TweenTo(-Constants.TileSize / 16f, 0.25f, Ease.CubicFastSlow))
+            .Add(_expandAmount.TweenTo(-Constants.TileSizePixels / 16f, 0.25f, Ease.CubicFastSlow))
             .Add(
                 new MultiplexTween()
                     .AddChannel(_opacity.TweenTo(0.85f, 0.35f, Ease.Linear))
@@ -40,7 +40,7 @@ public class AttackSquare : TargetSquare
     public override void DrawScaled(Painter painter)
     {
         var rectangle = Constants.PixelRectangle(Position).Inflated(_expandAmount, _expandAmount);
-        var shapeBounds = rectangle.Inflated(new Vector2(-Constants.TileSize * 0.15f));
+        var shapeBounds = rectangle.Inflated(new Vector2(-Constants.TileSizePixels * 0.15f));
         painter.DrawRectangle(shapeBounds.MovedByOrigin(DrawOrigin.Center), new DrawSettings {Color = Color.Red.WithMultipliedOpacity(_opacity), Angle = _angle + MathF.PI/4f, Origin = DrawOrigin.Center});
     }
 

@@ -35,8 +35,8 @@ public class MoveSquare : TargetSquare
 
     public override void DrawUnscaled(Painter painter, Matrix canvasToScreen)
     {
-        var rectangle = RectangleF.InflateFrom(Constants.ToWorldPosition(Position) + new Vector2(Constants.TileSize / 2f), _scale * Constants.TileSize / 2f,
-            _scale * Constants.TileSize / 2f);
+        var rectangle = RectangleF.InflateFrom(Constants.ToWorldPosition(Position) + new Vector2(Constants.TileSizePixels / 2f), _scale * Constants.TileSizePixels / 2f,
+            _scale * Constants.TileSizePixels / 2f);
         var transformedRectangle = RectangleF.Transform(rectangle, canvasToScreen);
 
         painter.DrawLineRectangle(transformedRectangle,

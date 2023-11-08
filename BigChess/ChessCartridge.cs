@@ -142,7 +142,6 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         {
             _isEditMode = !_isEditMode;
             _uiState.SelectedPiece = null;
-            Client.Debug.Log($"EDIT MODE: {_isEditMode}");
         }
 
         if (_isEditMode)
@@ -182,7 +181,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         var scrollDelta = input.Mouse.ScrollDelta(true);
 
         var zoomAmount = 60;
-        if (scrollDelta > 0 && _camera.ViewBounds.Height > Constants.TileSize * 8)
+        if (scrollDelta > 0 && _camera.ViewBounds.Height > Constants.TileSizePixels * 8)
         {
             _camera.ViewBounds = _camera.ViewBounds.GetZoomedInBounds(zoomAmount,
                 input.Mouse.Position(layer.WorldMatrix));
@@ -195,7 +194,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         }
 
         _camera.ViewBounds = _camera.ViewBounds.ConstrainedTo(Constants.TotalBoardSizePixels.ToRectangleF()
-            .Inflated(_camera.ViewBounds.Width - Constants.TileSize, _camera.ViewBounds.Height - Constants.TileSize));
+            .Inflated(_camera.ViewBounds.Width - Constants.TileSizePixels, _camera.ViewBounds.Height - Constants.TileSizePixels));
     }
 
     public override void Update(float dt)
@@ -209,7 +208,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     {
         _promptRail.EarlyDraw(painter);
 
-        painter.Clear(Color.Blue.DimmedBy(0.95f));
+        painter.Clear(Color.Blue.DesaturatedBy(0.8f));
         DrawBoard(painter);
         _diegeticUi.Draw(painter, _camera.CanvasToScreen);
         _overlayUi.Draw(painter);
@@ -276,7 +275,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             () =>
             {
                 _assets.AddAsset("Pieces",
-                    new GridBasedSpriteSheet(_assets.GetTexture("pieces"), new Point(Constants.PieceRenderSize)));
+                    new GridBasedSpriteSheet(_assets.GetTexture("pieces"), new Point(Constants.PieceSizePixels)));
             });
     }
 }

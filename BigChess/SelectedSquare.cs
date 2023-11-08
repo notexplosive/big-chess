@@ -18,7 +18,7 @@ public class ProposedMoveSquare : AnimatedObject
     {
         Visible = false;
         _tween
-            .Add(_expandAmount.CallbackSetTo(Constants.TileSize / 8f))
+            .Add(_expandAmount.CallbackSetTo(Constants.TileSizePixels / 8f))
             .Add(_opacity.CallbackSetTo(0))
             .Add(
                 new MultiplexTween()
@@ -63,7 +63,7 @@ public class SelectedSquare : AnimatedObject
     {
         _position = position;
         _tween
-            .Add(_expandAmount.TweenTo(Constants.TileSize / 8f, 0.25f, Ease.CubicFastSlow))
+            .Add(_expandAmount.TweenTo(Constants.TileSizePixels / 8f, 0.25f, Ease.CubicFastSlow))
             .Add(_expandAmount.TweenTo(0, 0.25f, Ease.CubicSlowFast))
             .Add(new WaitSecondsTween(0.25f))
             ;
@@ -92,7 +92,7 @@ public class SelectedSquare : AnimatedObject
         _tween = new SequenceTween()
             .Add(
                 new MultiplexTween()
-                    .AddChannel(_expandAmount.TweenTo(Constants.TileSize / 4f, 0.5f, Ease.CubicFastSlow))
+                    .AddChannel(_expandAmount.TweenTo(Constants.TileSizePixels / 4f, 0.5f, Ease.CubicFastSlow))
                     .AddChannel(_opacity.TweenTo(0, 0.15f, Ease.Linear))
             )
             .Add(new CallbackTween(Destroy))

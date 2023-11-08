@@ -8,9 +8,11 @@ public class ChessGameState
     private readonly ChessBoard _board;
     private PieceColor _currentTurn;
     private int? _promotingPieceId;
+    public int PendingActionPoints { get; private set; }
 
     public ChessGameState(ChessBoard board)
     {
+        PendingActionPoints = Constants.NumberOfActionPoints;
         _board = board;
     }
 
@@ -20,6 +22,7 @@ public class ChessGameState
         private set
         {
             _currentTurn = value;
+            PendingActionPoints = Constants.NumberOfActionPoints;
             TurnChanged?.Invoke(value);
         }
     }
@@ -28,6 +31,7 @@ public class ChessGameState
 
     public event Action<ChessPiece>? PromotionRequested;
     public event Action<PieceColor>? TurnChanged;
+    public event Action? ActionCompleted;
 
     public void NextTurn()
     {
@@ -66,7 +70,12 @@ public class ChessGameState
 
     private void CompleteAction()
     {
-        // todo: action points
-        NextTurn();
+        ActionCompleted?.Invoke();
+        PendingActionPoints--;
+
+        if (PendingActionPoints <= 0)
+        {
+            NextTurn();
+        }
     }
 }

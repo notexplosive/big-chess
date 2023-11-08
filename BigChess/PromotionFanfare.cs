@@ -40,10 +40,10 @@ public class PromotionFanfare : AnimatedObject
         Vector2 position = Constants.ToWorldPosition(_piece.Position)+_relativePosition;
         var depth = Depth.Middle - 2000;
 
-        var rectangle = new RectangleF(position, new Vector2(Constants.TileSize));
+        var rectangle = new RectangleF(position, new Vector2(Constants.TileSizePixels));
 
-        rectangle = rectangle.Inflated(new Vector2(Constants.TileSize) * _scale.Value / 2f -
-                                       new Vector2(Constants.TileSize / 2f));
+        rectangle = rectangle.Inflated(new Vector2(Constants.TileSizePixels) * _scale.Value / 2f -
+                                       new Vector2(Constants.TileSizePixels / 2f));
 
         rectangle = rectangle.MovedByOrigin(DrawOrigin.Center);
 

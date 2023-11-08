@@ -9,16 +9,18 @@ namespace BigChess;
 
 public static class Constants
 {
-    public static int PieceRenderSize => 426;
-    public static int TileSize => 64;
-    public static int BoardLength => 40;
+    public static int PieceSizePixels => 426;
+    public static int TileSizePixels => 64;
+    public static int StandardChessBoardLength => 8;
+    public static int SectionCount => 5;
+    public static int BoardLength => StandardChessBoardLength * SectionCount;
 
     public static int RenderWidth => 1920;
     public static int RenderHeight => 1080;
     
     public static Point RenderResolution => new(Constants.RenderWidth, Constants.RenderHeight);
-    public static Point TotalBoardSizePixels => new(Constants.BoardLength * Constants.TileSize);
-    public static int SectionCount => 5;
+    public static Point TotalBoardSizePixels => new(Constants.BoardLength * Constants.TileSizePixels);
+    public static int NumberOfActionPoints => 5;
 
     public static IEnumerable<BoardRectangle> BoardRectangles()
     {
@@ -27,7 +29,7 @@ public static class Constants
             for (var x = 0; x < Constants.BoardLength; x++)
             {
                 yield return new BoardRectangle(
-                    new RectangleF(new Vector2(x, y) * Constants.TileSize, new Vector2(Constants.TileSize)),
+                    new RectangleF(new Vector2(x, y) * Constants.TileSizePixels, new Vector2(Constants.TileSizePixels)),
                     new Point(x, y));
             }
         }
@@ -35,7 +37,7 @@ public static class Constants
 
     public static RectangleF PixelRectangle(Point position)
     {
-        return new RectangleF(position.ToVector2() * Constants.TileSize, new Vector2(Constants.TileSize));
+        return new RectangleF(position.ToVector2() * Constants.TileSizePixels, new Vector2(Constants.TileSizePixels));
     }
 
     public static int FrameIndex(PieceType type, PieceColor color)
@@ -80,7 +82,7 @@ public static class Constants
 
     public static Vector2 ToWorldPosition(Point gridPosition)
     {
-        return gridPosition.ToVector2() * Constants.TileSize;
+        return gridPosition.ToVector2() * Constants.TileSizePixels;
     }
 
     public static PieceColor OppositeColor(PieceColor color)

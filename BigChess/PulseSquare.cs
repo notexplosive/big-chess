@@ -18,7 +18,7 @@ public class PulseSquare : AnimatedObject
         _tween
             .Add(
                 new MultiplexTween()
-                    .AddChannel(_expandAmount.TweenTo(Constants.TileSize / 8f, 0.25f, Ease.CubicFastSlow))
+                    .AddChannel(_expandAmount.TweenTo(Constants.TileSizePixels / 8f, 0.25f, Ease.CubicFastSlow))
                     .AddChannel(_thickness.TweenTo(0, 0.25f, Ease.Linear))
             )
             .Add(new CallbackTween(() => { Destroy(); }));

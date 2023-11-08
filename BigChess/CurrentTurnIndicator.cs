@@ -11,15 +11,12 @@ public class CurrentTurnIndicator : AnimatedObject
     private readonly SequenceTween _tween = new();
     private readonly TweenableFloat _scale = new(1);
     private readonly TweenableFloat _opacity = new(1);
-    private readonly ChessGameState _gameState;
     private readonly IRuntime _runtime;
     private PieceColor _currentColor;
 
     public CurrentTurnIndicator(ChessGameState gameState, IRuntime runtime)
     {
-        _gameState = gameState;
         _runtime = runtime;
-
         gameState.TurnChanged += OnTurnChange;
     }
 
@@ -49,7 +46,7 @@ public class CurrentTurnIndicator : AnimatedObject
     {
         var color = Constants.PieceColorToRgb(_currentColor);
         var size = _runtime.Window.RenderResolution.ToVector2() / 2f * _scale;
-        var rectangle = RectangleF.InflateFrom(_runtime.Window.RenderResolution.ToVector2() / 2f, size.X, size.Y);
+        var rectangle = RectangleF.InflateFrom(size, size.X, size.Y);
         
         painter.DrawLineRectangle(rectangle, new LineDrawSettings{Color = color.WithMultipliedOpacity(_opacity), Depth = Depth.Front, Thickness = 20f});
     }

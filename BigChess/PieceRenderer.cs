@@ -54,10 +54,10 @@ public class PieceRenderer : AnimatedObject
             _fakePiecePosition.Value = position;
         }
 
-        var rectangle = new RectangleF(position, new Vector2(Constants.TileSize));
+        var rectangle = new RectangleF(position, new Vector2(Constants.TileSizePixels));
 
-        rectangle = rectangle.Inflated(new Vector2(Constants.TileSize) * _scale.Value / 2f -
-                                       new Vector2(Constants.TileSize / 2f));
+        rectangle = rectangle.Inflated(new Vector2(Constants.TileSizePixels) * _scale.Value / 2f -
+                                       new Vector2(Constants.TileSizePixels / 2f));
 
         rectangle = rectangle.MovedByOrigin(DrawOrigin.Center);
 
@@ -115,7 +115,7 @@ public class PieceRenderer : AnimatedObject
 
         var duration =
             ((_fakePiecePosition.Value - Constants.ToWorldPosition(newPosition) +
-              new Vector2(Constants.TileSize / 2f)) / Constants.TileSize).Length() / 20f;
+              new Vector2(Constants.TileSizePixels / 2f)) / Constants.TileSizePixels).Length() / 20f;
         tween.Add(
                 new DynamicTween(() =>
                 {
@@ -197,13 +197,13 @@ public class PieceRenderer : AnimatedObject
                 new MultiplexTween()
                     .AddChannel(
                         new SequenceTween()
-                            .Add(tweenableY.TweenTo(tweenableY.Value - Constants.TileSize * 2, duration / 2,
+                            .Add(tweenableY.TweenTo(tweenableY.Value - Constants.TileSizePixels * 2, duration / 2,
                                 Ease.QuadFastSlow))
                             .Add(tweenableY.TweenTo(tweenableY, duration / 2, Ease.QuadSlowFast))
                     )
                     .AddChannel(tweenableX.TweenTo(
                         tweenableX + Client.Random.Dirty.NextSign() * Client.Random.Dirty.NextFloat(0.25f, 1f) *
-                        Constants.TileSize, duration, Ease.Linear))
+                        Constants.TileSizePixels, duration, Ease.Linear))
                     .AddChannel(_angle.TweenTo(MathF.PI * 3, duration, Ease.Linear))
                     .AddChannel(_opacity.TweenTo(0, duration * 0.9f, Ease.Linear))
             );

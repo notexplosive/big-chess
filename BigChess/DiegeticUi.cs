@@ -60,7 +60,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     {
         if (_draggedPiece != null)
         {
-            _draggedPiece.Drag(input.Mouse.Position(hitTestStack.WorldMatrix) - new Vector2(Constants.TileSize) / 2f);
+            _draggedPiece.Drag(input.Mouse.Position(hitTestStack.WorldMatrix) - new Vector2(Constants.TileSizePixels) / 2f);
         }
     }
 
