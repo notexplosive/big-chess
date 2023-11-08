@@ -15,6 +15,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     private readonly UiState _uiState;
     private readonly ChessBoard _board;
     private readonly ChessInput _chessInput;
+    private readonly BoardData _boardData;
     private readonly Dictionary<int, PieceRenderer> _pieceRenderers = new();
     private readonly ProposedMoveSquare _proposedMoveSquare;
     private readonly List<TargetSquare> _targetSquares = new();
@@ -23,7 +24,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     private PieceRenderer? _draggedPiece;
     private SelectedSquare? _selection;
 
-    public DiegeticUi(UiState uiState, ChessBoard board, Assets assets, ChessInput chessInput)
+    public DiegeticUi(UiState uiState, ChessBoard board, Assets assets, ChessInput chessInput, BoardData boardData)
     {
         _proposedMoveSquare = _animatedObjects.Add(new ProposedMoveSquare());
 
@@ -31,6 +32,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
         _board = board;
         _assets = assets;
         _chessInput = chessInput;
+        _boardData = boardData;
         _uiState.SelectionChanged += SelectionChanged;
         _board.PieceAdded += OnPieceAdded;
         _board.PieceCaptured += OnPieceCaptured;
@@ -145,7 +147,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
                         _animatedObjects.Add(new AttackSquare(startingPosition, landingPosition.Position)));
                 }
 
-                if (Constants.IsWithinBoard(landingPosition.Position))
+                if (_boardData.IsWithinBoard(landingPosition.Position))
                 {
                     var delay = (startingPosition.ToVector2() - landingPosition.Position.ToVector2()).Length() / 100f;
                     _targetSquares.Add(_animatedObjects.Add(new MoveSquare(landingPosition.Position, delay)));

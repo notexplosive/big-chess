@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using ExplogineMonoGame;
 using ExplogineMonoGame.Data;
 using ExplogineMonoGame.Gui;
@@ -11,35 +10,47 @@ public static class Constants
 {
     public static int PieceSizePixels => 426;
     public static int TileSizePixels => 64;
-    public static int StandardChessBoardLength => 8;
-    public static int SectionCount => 5;
-    public static int BoardLength => StandardChessBoardLength * SectionCount;
-
     public static int RenderWidth => 1920;
     public static int RenderHeight => 1080;
-    
     public static Point RenderResolution => new(Constants.RenderWidth, Constants.RenderHeight);
-    public static Point TotalBoardSizePixels => new(Constants.BoardLength * Constants.TileSizePixels);
-    public static int NumberOfActionPoints => 5;
-
-    public static IEnumerable<BoardRectangle> BoardRectangles()
+    public static PieceColor OppositeColor(PieceColor color)
     {
-        for (var y = 0; y < Constants.BoardLength; y++)
+        return color switch
         {
-            for (var x = 0; x < Constants.BoardLength; x++)
-            {
-                yield return new BoardRectangle(
-                    new RectangleF(new Vector2(x, y) * Constants.TileSizePixels, new Vector2(Constants.TileSizePixels)),
-                    new Point(x, y));
-            }
-        }
+            PieceColor.White => PieceColor.Black,
+            PieceColor.Black => PieceColor.White,
+            _ => color
+        };
     }
 
+    public static Point Forward(PieceColor color)
+    {
+        if (color == PieceColor.White)
+        {
+            return new Point(0, -1);
+        }
+
+        return new Point(0, 1);
+    }
+
+    public static IGuiTheme Theme { get; } = new SimpleGuiTheme(Color.White, Color.Black, Color.Transparent, new IndirectFont("engine/logo-font", 32), selectionColor: Color.Cyan);
+
+    public static Color PieceColorToRgb(PieceColor color)
+    {
+        return color switch
+        {
+            PieceColor.White => Color.White,
+            PieceColor.Black => Color.Black,
+            _ => Color.Red
+        };
+    }
+    
     public static RectangleF PixelRectangle(Point position)
     {
         return new RectangleF(position.ToVector2() * Constants.TileSizePixels, new Vector2(Constants.TileSizePixels));
     }
 
+    
     public static int FrameIndex(PieceType type, PieceColor color)
     {
         switch (type, color)
@@ -74,46 +85,9 @@ public static class Constants
         return 0;
     }
 
-    public static bool IsWithinBoard(Point position)
-    {
-        return position.X >= 0 && position.Y >= 0 && position.X < Constants.BoardLength &&
-               position.Y < Constants.BoardLength;
-    }
-
+    
     public static Vector2 ToWorldPosition(Point gridPosition)
     {
         return gridPosition.ToVector2() * Constants.TileSizePixels;
-    }
-
-    public static PieceColor OppositeColor(PieceColor color)
-    {
-        return color switch
-        {
-            PieceColor.White => PieceColor.Black,
-            PieceColor.Black => PieceColor.White,
-            _ => color
-        };
-    }
-
-    public static Point Forward(PieceColor color)
-    {
-        if (color == PieceColor.White)
-        {
-            return new Point(0, -1);
-        }
-
-        return new Point(0, 1);
-    }
-
-    public static IGuiTheme Theme { get; } = new SimpleGuiTheme(Color.White, Color.Black, Color.Transparent, new IndirectFont("engine/logo-font", 32), selectionColor: Color.Cyan);
-
-    public static Color PieceColorToRgb(PieceColor color)
-    {
-        return color switch
-        {
-            PieceColor.White => Color.White,
-            PieceColor.Black => Color.Black,
-            _ => Color.Red
-        };
     }
 }

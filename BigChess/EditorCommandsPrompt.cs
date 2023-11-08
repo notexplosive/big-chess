@@ -8,11 +8,13 @@ namespace BigChess;
 public class EditorCommandsPrompt : ButtonListPrompt
 {
     private readonly ChessBoard _chessBoard;
+    private readonly BoardData _boardData;
     private bool _isOpen;
 
-    public EditorCommandsPrompt(IRuntime runtime, ChessBoard chessBoard) : base(runtime, "Editor")
+    public EditorCommandsPrompt(IRuntime runtime, ChessBoard chessBoard, BoardData boardData) : base(runtime, "Editor")
     {
         _chessBoard = chessBoard;
+        _boardData = boardData;
     }
 
     public override bool IsOpen => _isOpen;
@@ -53,11 +55,11 @@ public class EditorCommandsPrompt : ButtonListPrompt
         foreach (var id in ids)
         {
             var piece = _chessBoard.GetPieceFromId(id)!.Value;
-            var newY = Constants.BoardLength - piece.Position.Y - 1; 
+            var newY = _boardData.BoardLength - piece.Position.Y - 1; 
 
-            if (piece.Position.Y > Constants.BoardLength / 2)
+            if (piece.Position.Y > _boardData.BoardLength / 2)
             {
-                newY = Constants.BoardLength - piece.Position.Y - 1;
+                newY = _boardData.BoardLength - piece.Position.Y - 1;
             }
 
             var newPosition = new Point(piece.Position.X,newY);

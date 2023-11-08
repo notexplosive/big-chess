@@ -25,16 +25,18 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     private readonly Rail _promptRail = new();
     private readonly UiState _uiState;
     private bool _isEditMode;
+    private readonly BoardData _boardData;
 
     public ChessCartridge(IRuntime runtime) : base(runtime)
     {
+        _boardData = new BoardData();
         _assets = new Assets();
-        var board = new ChessBoard();
-        var gameState = new ChessGameState(board);
         _input = new ChessInput();
         _uiState = new UiState();
-        _diegeticUi = new DiegeticUi(_uiState, board, _assets, _input);
-        _overlayUi = new OverlayUi(gameState, runtime);
+        var board = new ChessBoard(_boardData);
+        var gameState = new ChessGameState(board, _boardData);
+        _diegeticUi = new DiegeticUi(_uiState, board, _assets, _input, _boardData);
+        _overlayUi = new OverlayUi(gameState, runtime, _boardData);
         var spawnPrompt = new PromotionPrompt(gameState, runtime, _assets, true, new List<string>
         {
             nameof(PieceType.Pawn),
@@ -53,12 +55,12 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         });
         var savePrompt = new SavePrompt(runtime);
         var openPrompt = new OpenPrompt(runtime);
-        var editorCommandsPrompt = new EditorCommandsPrompt(runtime, board);
+        var editorCommandsPrompt = new EditorCommandsPrompt(runtime, board, _boardData);
 
         _camera = new Camera(Constants.RenderResolution.ToRectangleF(), Constants.RenderResolution);
-        _camera.CenterPosition = Constants.TotalBoardSizePixels.ToVector2() / 2f;
+        _camera.CenterPosition = _boardData.TotalBoardSizePixels.ToVector2() / 2f;
         _camera.ZoomOutFrom(
-            (int) (Constants.TotalBoardSizePixels.X * runtime.Window.RenderResolution.AspectRatio() * 1.5f),
+            (int) (_boardData.TotalBoardSizePixels.X * runtime.Window.RenderResolution.AspectRatio() * 1.5f),
             _camera.CenterPosition);
 
         _gameSession = new GameSession(gameState, _uiState, board, _diegeticUi, promotionPrompt);
@@ -160,7 +162,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         HandleCameraControls(input, worldLayer);
 
         worldLayer.AddInfiniteZone(Depth.Back, () => _input.OnHoverVoid(input));
-        foreach (var boardRectangle in Constants.BoardRectangles())
+        foreach (var boardRectangle in _boardData.BoardRectangles())
         {
             worldLayer.AddZone(boardRectangle.PixelRect, Depth.Middle,
                 () => { _input.SetHoveredSquare(input, boardRectangle.GridPosition); });
@@ -193,7 +195,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
                 input.Mouse.Position(layer.WorldMatrix));
         }
 
-        _camera.ViewBounds = _camera.ViewBounds.ConstrainedTo(Constants.TotalBoardSizePixels.ToRectangleF()
+        _camera.ViewBounds = _camera.ViewBounds.ConstrainedTo(_boardData.TotalBoardSizePixels.ToRectangleF()
             .Inflated(_camera.ViewBounds.Width - Constants.TileSizePixels, _camera.ViewBounds.Height - Constants.TileSizePixels));
     }
 
@@ -225,7 +227,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             extraDesaturate = 0.25f;
         }
 
-        foreach (var boardCell in Constants.BoardRectangles())
+        foreach (var boardCell in _boardData.BoardRectangles())
         {
             var lightColor = new Color(90, 141, 0).DesaturatedBy(extraDesaturate);
             var darkColor = new Color(34, 104, 34).DesaturatedBy(extraDesaturate);

@@ -12,6 +12,7 @@ public class ActionPointsCounter : AnimatedObject
 {
     private readonly ChessGameState _gameState;
     private readonly IRuntime _runtime;
+    private readonly BoardData _boardData;
     private readonly SequenceTween _tween = new();
     private readonly LayoutArrangement _layout;
     private readonly Cell[] _tweenableCells;
@@ -22,13 +23,14 @@ public class ActionPointsCounter : AnimatedObject
         public TweenableFloat FillScale = new(1);
     }
     
-    public ActionPointsCounter(ChessGameState gameState, IRuntime runtime)
+    public ActionPointsCounter(ChessGameState gameState, IRuntime runtime, BoardData boardData)
     {
         _gameState = gameState;
         _runtime = runtime;
+        _boardData = boardData;
         _currentColor = _gameState.CurrentTurn;
 
-        _tweenableCells = new Cell[Constants.NumberOfActionPoints];
+        _tweenableCells = new Cell[boardData.NumberOfActionPoints];
 
         for (var index = 0; index < _tweenableCells.Length; index++)
         {
@@ -90,7 +92,7 @@ public class ActionPointsCounter : AnimatedObject
         var size = _runtime.Window.RenderResolution.ToVector2() / 2;
         var screenRectangle = RectangleF.InflateFrom(size, size.X - 50, size.Y - 50);
         var cellSize = 80;
-        var barWidth = cellSize * Constants.NumberOfActionPoints;
+        var barWidth = cellSize * _boardData.NumberOfActionPoints;
         var barPosition = new Vector2(screenRectangle.X, screenRectangle.Y);
         var barRectangle = new RectangleF(barPosition, new Vector2(screenRectangle.Width, cellSize));
 
@@ -98,10 +100,10 @@ public class ActionPointsCounter : AnimatedObject
 
         var root = new LayoutBuilder(new Style{Alignment = Alignment.Center, Orientation = Orientation.Horizontal});
 
-        for (int i = 0; i < Constants.NumberOfActionPoints; i++)
+        for (int i = 0; i < _boardData.NumberOfActionPoints; i++)
         {
             root.Add(L.FillVertical("Cell", cellSize));
-            if (i < Constants.NumberOfActionPoints - 1)
+            if (i < _boardData.NumberOfActionPoints - 1)
             {
                 root.Add(L.FixedElement(20,0));
             }

@@ -11,11 +11,16 @@ public class OverlayUi : IUpdateHook, IUpdateInputHook, IDrawHook
     private readonly IRuntime _runtime;
     private readonly SequenceTween _tween = new();
 
-    public OverlayUi(ChessGameState gameState, IRuntime runtime)
+    public OverlayUi(ChessGameState gameState, IRuntime runtime, BoardData boardData)
     {
         _runtime = runtime;
         _animatedObjects.Add(new CurrentTurnIndicator(gameState, runtime));
-        _animatedObjects.Add(new ActionPointsCounter(gameState, runtime));
+
+        if (boardData.NumberOfActionPoints > 1)
+        {
+            _animatedObjects.Add(new ActionPointsCounter(gameState, runtime, boardData));
+        }
+
         gameState.TurnChanged += AnnounceTurn;
     }
 

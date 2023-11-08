@@ -6,13 +6,15 @@ namespace BigChess;
 public class ChessGameState
 {
     private readonly ChessBoard _board;
+    private readonly BoardData _boardData;
     private PieceColor _currentTurn;
     private int? _promotingPieceId;
     public int PendingActionPoints { get; private set; }
 
-    public ChessGameState(ChessBoard board)
+    public ChessGameState(ChessBoard board, BoardData boardData)
     {
-        PendingActionPoints = Constants.NumberOfActionPoints;
+        _boardData = boardData;
+        PendingActionPoints = _boardData.NumberOfActionPoints;
         _board = board;
     }
 
@@ -22,7 +24,7 @@ public class ChessGameState
         private set
         {
             _currentTurn = value;
-            PendingActionPoints = Constants.NumberOfActionPoints;
+            PendingActionPoints = _boardData.NumberOfActionPoints;
             TurnChanged?.Invoke(value);
         }
     }
@@ -49,7 +51,7 @@ public class ChessGameState
         _board.ForceMovePiece(move);
         
         var piece = move.PieceAfterMove;
-        if (piece.PieceType == PieceType.Pawn && !Constants.IsWithinBoard(piece.Position + Constants.Forward(piece.Color)))
+        if (piece.PieceType == PieceType.Pawn && !_boardData.IsWithinBoard(piece.Position + Constants.Forward(piece.Color)))
         {
             _promotingPieceId = piece.Id;
             PromotionRequested?.Invoke(piece);

@@ -9,10 +9,12 @@ namespace BigChess;
 
 public class ChessBoard
 {
+    private readonly BoardData _boardData;
     private readonly Dictionary<int, ChessPiece> _pieces = new();
 
-    public ChessBoard()
+    public ChessBoard(BoardData boardData)
     {
+        _boardData = boardData;
     }
 
     public int IdPool { get; set; }
@@ -92,7 +94,7 @@ public class ChessBoard
 
     public bool IsEmptySquare(Point position)
     {
-        return Constants.IsWithinBoard(position) && GetPieceAt(position) == null;
+        return _boardData.IsWithinBoard(position) && GetPieceAt(position) == null;
     }
 
     public void Promote(int id, PieceType pieceType)
