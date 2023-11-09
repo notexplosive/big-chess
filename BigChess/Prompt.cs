@@ -1,4 +1,3 @@
-using System;
 using ExplogineCore.Data;
 using ExplogineMonoGame;
 using ExplogineMonoGame.Data;
@@ -7,10 +6,23 @@ using Microsoft.Xna.Framework;
 
 namespace BigChess;
 
-public abstract class Prompt: IUpdateInputHook, IUpdateHook, IDrawHook
+public abstract class Prompt : IUpdateInputHook, IUpdateHook, IDrawHook
 {
     protected readonly HoverState BackgroundHover = new();
-    
+    public abstract bool IsOpen { get; }
+
+    public void Draw(Painter painter)
+    {
+        if (!IsOpen)
+        {
+            return;
+        }
+
+        DrawInternal(painter);
+    }
+
+    public abstract void Update(float dt);
+
     public void UpdateInput(ConsumableInput input, HitTestStack hitTestStack)
     {
         if (!IsOpen)
@@ -25,18 +37,7 @@ public abstract class Prompt: IUpdateInputHook, IUpdateHook, IDrawHook
     }
 
     protected abstract void UpdateInputInternal(ConsumableInput input, HitTestStack overlayLayer);
-    public abstract void Update(float dt);
-
-    public void Draw(Painter painter)
-    {
-        if (!IsOpen)
-        {
-            return;
-        }
-
-        DrawInternal(painter);
-    }
 
     protected abstract void DrawInternal(Painter painter);
-    public abstract bool IsOpen { get; }
+    public abstract void Cancel();
 }

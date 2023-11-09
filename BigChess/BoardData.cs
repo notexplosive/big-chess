@@ -10,9 +10,26 @@ public class BoardData
 {
     private SerializedBoardData _serialized = new();
     public int SectionCount => _serialized.SectionCount;
-    public int BoardLength => _serialized.BoardLength;
-    public int NumberOfActionPoints => _serialized.NumberOfActionPoints;
-    
+    public int BoardLength
+    {
+        get => _serialized.BoardLength;
+        set
+        {
+            _serialized.BoardLength = Math.Max(value, 1);
+            Changed?.Invoke(this);
+        }
+    }
+
+    public int NumberOfActionPoints
+    {
+        get => _serialized.NumberOfActionPoints;
+        set
+        {
+            _serialized.NumberOfActionPoints = Math.Max(value, 1);
+            Changed?.Invoke(this);
+        }
+    }
+
     public event Action<BoardData>? Changed;
 
     public Point TotalBoardSizePixels()

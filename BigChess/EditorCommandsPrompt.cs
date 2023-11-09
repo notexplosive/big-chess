@@ -1,14 +1,16 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ExplogineMonoGame;
+using ExTween;
 using Microsoft.Xna.Framework;
 
 namespace BigChess;
 
 public class EditorCommandsPrompt : ButtonListPrompt
 {
-    private readonly ChessBoard _chessBoard;
     private readonly BoardData _boardData;
+    private readonly ChessBoard _chessBoard;
     private bool _isOpen;
 
     public EditorCommandsPrompt(IRuntime runtime, ChessBoard chessBoard, BoardData boardData) : base(runtime, "Editor")
@@ -27,10 +29,17 @@ public class EditorCommandsPrompt : ButtonListPrompt
 
     private void Refresh()
     {
-        var buttons = new List<ButtonTemplate>();
+        var buttons = new List<IEditorOption>();
 
         buttons.Add(new ButtonTemplate("Mirror White Vertically (Delete Black)", () => Mirror(PieceColor.White)));
         buttons.Add(new ButtonTemplate("Mirror Black Vertically (Delete White)", () => Mirror(PieceColor.Black)));
+        buttons.Add(new SliderTemplate(x=>$"Board Width: {x}",
+            new TweenableInt(() => _boardData.BoardLength, x => _boardData.BoardLength = x)));
+        buttons.Add(new SliderTemplate(x=>$"Moves Per Turn: {x}",
+            new TweenableInt(() => _boardData.NumberOfActionPoints, x =>
+            {
+                _boardData.NumberOfActionPoints = x;
+            })));
 
         GenerateButtons(buttons);
     }
@@ -48,21 +57,21 @@ public class EditorCommandsPrompt : ButtonListPrompt
                 _chessBoard.DeletePiece(id);
             }
         }
-        
+
         // refresh list, post cull
         ids = _chessBoard.GetAllIds().ToList();
 
         foreach (var id in ids)
         {
             var piece = _chessBoard.GetPieceFromId(id)!.Value;
-            var newY = _boardData.BoardLength - piece.Position.Y - 1; 
+            var newY = _boardData.BoardLength - piece.Position.Y - 1;
 
             if (piece.Position.Y > _boardData.BoardLength / 2)
             {
                 newY = _boardData.BoardLength - piece.Position.Y - 1;
             }
 
-            var newPosition = new Point(piece.Position.X,newY);
+            var newPosition = new Point(piece.Position.X, newY);
 
             if (_chessBoard.GetPieceAt(newPosition) == null)
             {

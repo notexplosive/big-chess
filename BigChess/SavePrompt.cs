@@ -89,7 +89,7 @@ public class SavePrompt : Prompt, IEarlyDrawHook
         _bufferedCallback = null;
     }
 
-    public void Cancel()
+    public override void Cancel()
     {
         _bufferedCallback = null;
     }

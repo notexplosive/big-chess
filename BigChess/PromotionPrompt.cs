@@ -97,6 +97,11 @@ public class PromotionPrompt : Prompt
         painter.EndSpriteBatch();
     }
 
+    public override void Cancel()
+    {
+        // this does nothing, this prompt is not cancellable
+    }
+
     public override void Update(float dt)
     {
     }

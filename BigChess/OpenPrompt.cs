@@ -34,7 +34,7 @@ public class OpenPrompt : ButtonListPrompt
     {
         var files = OpenPrompt.ScenariosFolder.GetFilesAt(".");
 
-        var buttonTemplates = new List<ButtonTemplate>();
+        var buttonTemplates = new List<IEditorOption>();
 
         foreach (var file in files)
         {

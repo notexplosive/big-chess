@@ -1,4 +1,6 @@
-﻿using ExplogineCore;
+﻿using System.Collections.Generic;
+using System.Linq;
+using ExplogineCore;
 using ExplogineMonoGame;
 using ExplogineMonoGame.Data;
 using ExplogineMonoGame.Input;
@@ -11,13 +13,13 @@ namespace BigChess;
 public class EditorSession : Session
 {
     private readonly ChessBoard _board;
-    private readonly DiegeticUi _diegeticUi;
-    private readonly SavePrompt _savePrompt;
-    private readonly OpenPrompt _openPrompt;
-    private readonly IFileSystem _scenarioFiles;
-    private readonly EditorCommandsPrompt _editorCommandsPrompt;
     private readonly BoardData _boardData;
+    private readonly DiegeticUi _diegeticUi;
+    private readonly EditorCommandsPrompt _editorCommandsPrompt;
     private readonly ChessGameState _gameState;
+    private readonly OpenPrompt _openPrompt;
+    private readonly SavePrompt _savePrompt;
+    private readonly IFileSystem _scenarioFiles;
     private readonly PromotionPrompt _spawnPrompt;
 
     public EditorSession(ChessGameState gameState, ChessBoard board, DiegeticUi diegeticUi,
@@ -95,7 +97,7 @@ public class EditorSession : Session
                 {
                     _savePrompt.Request(fileName =>
                     {
-                        var json = JsonConvert.SerializeObject(new SerializedScenario()
+                        var json = JsonConvert.SerializeObject(new SerializedScenario
                         {
                             Board = _board.Serialize(),
                             BoardData = _boardData.Serialize()
@@ -114,7 +116,7 @@ public class EditorSession : Session
                 }
             }
 
-            if (input.Keyboard.GetButton(Keys.E).WasPressed)
+            if (input.Keyboard.GetButton(Keys.OemTilde).WasPressed)
             {
                 _editorCommandsPrompt.Open();
             }
@@ -123,18 +125,25 @@ public class EditorSession : Session
 
     public override void OnExit()
     {
-        _savePrompt.Cancel();
-        _editorCommandsPrompt.Cancel();
-        _openPrompt.Cancel();
+        foreach (var prompt in AllPrompts())
+        {
+            prompt.Cancel();
+        }
     }
 
     public override void OnEnter()
     {
-        
     }
 
     private bool IsPromptOpen()
     {
-        return _savePrompt.IsOpen || _openPrompt.IsOpen || _spawnPrompt.IsOpen;
+        return AllPrompts().Any(prompt => prompt.IsOpen);
+    }
+
+    private IEnumerable<Prompt> AllPrompts()
+    {
+        yield return _savePrompt;
+        yield return _openPrompt;
+        yield return _spawnPrompt;
     }
 }
