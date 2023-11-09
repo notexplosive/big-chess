@@ -1,16 +1,24 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using ExplogineMonoGame.Data;
 using Microsoft.Xna.Framework;
 
 namespace BigChess;
 
+[Serializable]
 public class BoardData
 {
+    private SerializedBoardData _serialized = new();
+    public int SectionCount => _serialized.SectionCount;
+    public int BoardLength => _serialized.BoardLength;
+    public int NumberOfActionPoints => _serialized.NumberOfActionPoints;
+    
+    public event Action<BoardData>? Changed;
 
-    public int SectionCount => 1;
-    public int BoardLength => 6; //8 * SectionCount;
-    public Point TotalBoardSizePixels => new(BoardLength * Constants.TileSizePixels);
-    public int NumberOfActionPoints => 1;
+    public Point TotalBoardSizePixels()
+    {
+        return new Point(BoardLength * Constants.TileSizePixels);
+    }
 
     public IEnumerable<BoardRectangle> BoardRectangles()
     {
@@ -27,11 +35,20 @@ public class BoardData
         }
     }
 
-
     public bool IsWithinBoard(Point position)
     {
         return position.X >= 0 && position.Y >= 0 && position.X < BoardLength &&
                position.Y < BoardLength;
     }
 
+    public void PopulateFromScenario(SerializedScenario scenario)
+    {
+        _serialized = scenario.BoardData;
+        Changed?.Invoke(this);
+    }
+
+    public SerializedBoardData Serialize()
+    {
+        return _serialized;
+    }
 }

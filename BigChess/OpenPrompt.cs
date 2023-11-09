@@ -9,7 +9,7 @@ namespace BigChess;
 
 public class OpenPrompt : ButtonListPrompt
 {
-    private Action<SerializedBoard>? _bufferedCallback;
+    private Action<SerializedScenario>? _bufferedCallback;
 
     public OpenPrompt(IRuntime runtime) : base(runtime, "Load Scenario")
     {
@@ -24,7 +24,7 @@ public class OpenPrompt : ButtonListPrompt
     }
 
 
-    public void Request(Action<SerializedBoard> whenDone)
+    public void Request(Action<SerializedScenario> whenDone)
     {
         _bufferedCallback = whenDone;
         Refresh();
@@ -50,7 +50,7 @@ public class OpenPrompt : ButtonListPrompt
     private void OpenLevel(string path)
     {
         var json = ScenariosFolder.ReadFile(path);
-        var result = JsonConvert.DeserializeObject<SerializedBoard>(json);
+        var result = JsonConvert.DeserializeObject<SerializedScenario>(json);
 
         if (result != null)
         {

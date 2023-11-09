@@ -14,8 +14,16 @@ public class ChessGameState
     public ChessGameState(ChessBoard board, BoardData boardData)
     {
         _boardData = boardData;
-        PendingActionPoints = _boardData.NumberOfActionPoints;
         _board = board;
+
+        boardData.Changed += OnBoardDataChanged;
+        OnBoardDataChanged(boardData);
+    }
+
+    private void OnBoardDataChanged(BoardData boardData)
+    {
+        PendingActionPoints = boardData.NumberOfActionPoints;
+        CurrentTurn = PieceColor.White;
     }
 
     public PieceColor CurrentTurn

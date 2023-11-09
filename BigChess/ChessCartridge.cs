@@ -36,7 +36,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         var board = new ChessBoard(_boardData);
         var gameState = new ChessGameState(board, _boardData);
         _diegeticUi = new DiegeticUi(_uiState, board, _assets, _input, _boardData);
-        _overlayUi = new OverlayUi(gameState, runtime, _boardData);
+        _overlayUi = new OverlayUi(gameState, runtime, _boardData, () =>_isEditMode);
         var spawnPrompt = new PromotionPrompt(gameState, runtime, _assets, true, new List<string>
         {
             nameof(PieceType.Pawn),
@@ -58,14 +58,14 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         var editorCommandsPrompt = new EditorCommandsPrompt(runtime, board, _boardData);
 
         _camera = new Camera(Constants.RenderResolution.ToRectangleF(), Constants.RenderResolution);
-        _camera.CenterPosition = _boardData.TotalBoardSizePixels.ToVector2() / 2f;
+        _camera.CenterPosition = _boardData.TotalBoardSizePixels().ToVector2() / 2f;
         _camera.ZoomOutFrom(
-            (int) (_boardData.TotalBoardSizePixels.X * runtime.Window.RenderResolution.AspectRatio() * 1.5f),
+            (int) (_boardData.TotalBoardSizePixels().X * runtime.Window.RenderResolution.AspectRatio() * 1.5f),
             _camera.CenterPosition);
 
         _gameSession = new GameSession(gameState, _uiState, board, _diegeticUi, promotionPrompt);
         _editorSession = new EditorSession(gameState, board, _diegeticUi, spawnPrompt, savePrompt, openPrompt,
-            editorCommandsPrompt);
+            editorCommandsPrompt, _boardData);
 
         _promptRail.Add(savePrompt);
         _promptRail.Add(promotionPrompt);
@@ -195,7 +195,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
                 input.Mouse.Position(layer.WorldMatrix));
         }
 
-        _camera.ViewBounds = _camera.ViewBounds.ConstrainedTo(_boardData.TotalBoardSizePixels.ToRectangleF()
+        _camera.ViewBounds = _camera.ViewBounds.ConstrainedTo(_boardData.TotalBoardSizePixels().ToRectangleF()
             .Inflated(_camera.ViewBounds.Width - Constants.TileSizePixels, _camera.ViewBounds.Height - Constants.TileSizePixels));
     }
 

@@ -14,8 +14,8 @@ public class ActionPointsCounter : AnimatedObject
     private readonly IRuntime _runtime;
     private readonly BoardData _boardData;
     private readonly SequenceTween _tween = new();
-    private readonly LayoutArrangement _layout;
-    private readonly Cell[] _tweenableCells;
+    private LayoutArrangement _layout = null!;
+    private Cell[] _tweenableCells = null!;
     private PieceColor _currentColor;
 
     private class Cell
@@ -29,16 +29,22 @@ public class ActionPointsCounter : AnimatedObject
         _runtime = runtime;
         _boardData = boardData;
         _currentColor = _gameState.CurrentTurn;
+        
+        boardData.Changed += RebuildCellsArray;
+        gameState.ActionCompleted += OnActionCompleted;
+        gameState.TurnChanged += OnTurnChanged;
+        
+        RebuildCellsArray(boardData);
+    }
 
+    private void RebuildCellsArray(BoardData boardData)
+    {
         _tweenableCells = new Cell[boardData.NumberOfActionPoints];
-
+        
         for (var index = 0; index < _tweenableCells.Length; index++)
         {
             _tweenableCells[index] = new();
         }
-
-        gameState.ActionCompleted += OnActionCompleted;
-        gameState.TurnChanged += OnTurnChanged;
         
         _layout = ComputeLayout();
     }
@@ -66,6 +72,11 @@ public class ActionPointsCounter : AnimatedObject
 
     public override void DrawScaled(Painter painter)
     {
+        if (_boardData.NumberOfActionPoints <= 1)
+        {
+            return;
+        }
+
         var fillColor = Constants.PieceColorToRgb(_currentColor);
         var lineColor = Constants.PieceColorToRgb(Constants.OppositeColor(_currentColor));
         var cellIndex = 0;

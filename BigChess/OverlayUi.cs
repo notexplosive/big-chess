@@ -1,4 +1,5 @@
-﻿using ExplogineMonoGame;
+﻿using System;
+using ExplogineMonoGame;
 using ExplogineMonoGame.Data;
 using ExplogineMonoGame.Rails;
 using ExTween;
@@ -9,17 +10,15 @@ namespace BigChess;
 public class OverlayUi : IUpdateHook, IUpdateInputHook, IDrawHook
 {
     private readonly IRuntime _runtime;
+    private readonly Func<bool> _isEditMode;
     private readonly SequenceTween _tween = new();
 
-    public OverlayUi(ChessGameState gameState, IRuntime runtime, BoardData boardData)
+    public OverlayUi(ChessGameState gameState, IRuntime runtime, BoardData boardData, Func<bool> isEditMode)
     {
         _runtime = runtime;
+        _isEditMode = isEditMode;
         _animatedObjects.Add(new CurrentTurnIndicator(gameState, runtime));
-
-        if (boardData.NumberOfActionPoints > 1)
-        {
-            _animatedObjects.Add(new ActionPointsCounter(gameState, runtime, boardData));
-        }
+        _animatedObjects.Add(new ActionPointsCounter(gameState, runtime, boardData));
 
         gameState.TurnChanged += AnnounceTurn;
     }
@@ -50,6 +49,9 @@ public class OverlayUi : IUpdateHook, IUpdateInputHook, IDrawHook
 
     private void AnnounceTurn(PieceColor color)
     {
-        _animatedObjects.Add(new TurnAnnouncement(color, _runtime.Window.RenderResolution));
+        if (!_isEditMode())
+        {
+            _animatedObjects.Add(new TurnAnnouncement(color, _runtime.Window.RenderResolution));
+        }
     }
 }

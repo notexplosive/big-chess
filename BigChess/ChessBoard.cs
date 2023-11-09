@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using ExplogineMonoGame;
 using Microsoft.Xna.Framework;
-using Newtonsoft.Json;
 
 namespace BigChess;
 
@@ -138,11 +138,11 @@ public class ChessBoard
         return result;
     }
 
-    public void Deserialize(SerializedBoard scenario)
+    public void PopulateFromScenario(SerializedScenario scenario)
     {
         ClearAllPieces();
 
-        foreach (var piece in scenario.Pieces)
+        foreach (var piece in scenario.Board.Pieces)
         {
             AddPiece(piece.Deserialize());
         }
@@ -156,35 +156,5 @@ public class ChessBoard
         {
             DeletePiece(id);
         }
-    }
-}
-
-[Serializable]
-public class SerializedBoard
-{
-    [JsonProperty("pieces")]
-    public List<SerializedChessPiece> Pieces { get; set; } = new();
-}
-
-[Serializable]
-public class SerializedChessPiece
-{
-    [JsonProperty("position")]
-    public SerializedGridPosition Position { get; set; } = new();
-
-    [JsonProperty("type")]
-    public PieceType Type { get; set; }
-    
-    [JsonProperty("color")]
-    public PieceColor Color { get; set; }
-
-    public ChessPiece Deserialize()
-    {
-        return new ChessPiece
-        {
-            PieceType = Type,
-            Color = Color,
-            Position = Position.ToPoint()
-        };
     }
 }

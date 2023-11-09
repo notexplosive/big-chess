@@ -16,11 +16,13 @@ public class EditorSession : Session
     private readonly OpenPrompt _openPrompt;
     private readonly IFileSystem _scenarioFiles;
     private readonly EditorCommandsPrompt _editorCommandsPrompt;
+    private readonly BoardData _boardData;
     private readonly ChessGameState _gameState;
     private readonly PromotionPrompt _spawnPrompt;
 
     public EditorSession(ChessGameState gameState, ChessBoard board, DiegeticUi diegeticUi,
-        PromotionPrompt spawnPrompt, SavePrompt savePrompt, OpenPrompt openPrompt, EditorCommandsPrompt editorCommandsPrompt)
+        PromotionPrompt spawnPrompt, SavePrompt savePrompt, OpenPrompt openPrompt,
+        EditorCommandsPrompt editorCommandsPrompt, BoardData boardData)
     {
         _scenarioFiles = Client.Debug.RepoFileSystem.GetDirectory("Scenarios");
         _gameState = gameState;
@@ -30,6 +32,7 @@ public class EditorSession : Session
         _savePrompt = savePrompt;
         _openPrompt = openPrompt;
         _editorCommandsPrompt = editorCommandsPrompt;
+        _boardData = boardData;
     }
 
     public override void DragInitiated(Point position)
@@ -92,14 +95,22 @@ public class EditorSession : Session
                 {
                     _savePrompt.Request(fileName =>
                     {
-                        var json = JsonConvert.SerializeObject(_board.Serialize(), Formatting.Indented);
+                        var json = JsonConvert.SerializeObject(new SerializedScenario()
+                        {
+                            Board = _board.Serialize(),
+                            BoardData = _boardData.Serialize()
+                        }, Formatting.Indented);
                         _scenarioFiles.WriteToFile(fileName, json);
                     });
                 }
 
                 if (input.Keyboard.GetButton(Keys.O, true).WasPressed)
                 {
-                    _openPrompt.Request(scenario => { _board.Deserialize(scenario); });
+                    _openPrompt.Request(scenario =>
+                    {
+                        _boardData.PopulateFromScenario(scenario);
+                        _board.PopulateFromScenario(scenario);
+                    });
                 }
             }
 
