@@ -18,7 +18,7 @@ public class OpenPrompt : ButtonListPrompt
 
     public override bool IsOpen => _bufferedCallback != null;
 
-    protected override void Cancel()
+    public override void Cancel()
     {
         _bufferedCallback = null;
     }

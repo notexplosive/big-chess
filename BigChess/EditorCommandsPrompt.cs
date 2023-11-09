@@ -83,7 +83,7 @@ public class EditorCommandsPrompt : ButtonListPrompt
         _isOpen = false;
     }
 
-    protected override void Cancel()
+    public override void Cancel()
     {
         Close();
     }

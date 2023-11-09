@@ -82,7 +82,7 @@ public class EditorSession : Session
 
     public override void UpdateInput(ConsumableInput input, HitTestStack screenLayer)
     {
-        if (input.Keyboard.GetButton(Keys.W).WasPressed)
+        if (input.Keyboard.GetButton(Keys.Tab).WasPressed)
         {
             _gameState.NextTurn();
         }
@@ -120,7 +120,19 @@ public class EditorSession : Session
             }
         }
     }
-    
+
+    public override void OnExit()
+    {
+        _savePrompt.Cancel();
+        _editorCommandsPrompt.Cancel();
+        _openPrompt.Cancel();
+    }
+
+    public override void OnEnter()
+    {
+        
+    }
+
     private bool IsPromptOpen()
     {
         return _savePrompt.IsOpen || _openPrompt.IsOpen || _spawnPrompt.IsOpen;

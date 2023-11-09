@@ -13,4 +13,6 @@ public abstract class Session : IUpdateInputHook
     public abstract void DragSucceeded(Point dragStart, Point position);
     public abstract void DragFinished(Point? position);
     public abstract void UpdateInput(ConsumableInput input, HitTestStack hitTestStack);
+    public abstract void OnExit();
+    public abstract void OnEnter();
 }

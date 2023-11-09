@@ -95,5 +95,5 @@ public abstract class ButtonListPrompt : Prompt, IEarlyDrawHook
         _scrollableArea = new ScrollableArea(_widget.Size, boundaries, Depth.Front + 10);
     }
 
-    protected abstract void Cancel();
+    public abstract void Cancel();
 }

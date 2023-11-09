@@ -7,11 +7,11 @@ namespace BigChess;
 
 public class GameSession : Session
 {
-    private readonly ChessGameState _gameState;
-    private readonly UiState _uiState;
     private readonly ChessBoard _board;
     private readonly DiegeticUi _diegeticUi;
+    private readonly ChessGameState _gameState;
     private readonly PromotionPrompt _promotionPrompt;
+    private readonly UiState _uiState;
 
     public GameSession(ChessGameState gameState, UiState uiState, ChessBoard board, DiegeticUi diegeticUi,
         PromotionPrompt promotionPrompt)
@@ -24,8 +24,7 @@ public class GameSession : Session
 
         _gameState.PromotionRequested += RequestPromotion;
     }
-    
-    
+
     private void RequestPromotion(ChessPiece piece)
     {
         _promotionPrompt.Request(type => { _gameState.FinishPromotePiece(_gameState.PendingPromotionId, type); });
@@ -41,7 +40,7 @@ public class GameSession : Session
             _diegeticUi.BeginDrag(piece!.Value);
         }
     }
-    
+
     private bool AttemptSelect(ChessPiece? piece)
     {
         if (IsSelectable(piece))
@@ -82,7 +81,7 @@ public class GameSession : Session
             }
         }
     }
-    
+
     private ChessMove? GetSelectedPieceValidMoveTo(Point position)
     {
         if (_uiState.SelectedPiece.HasValue)
@@ -127,6 +126,13 @@ public class GameSession : Session
 
     public override void UpdateInput(ConsumableInput input, HitTestStack screenLayer)
     {
-        
+    }
+
+    public override void OnExit()
+    {
+    }
+
+    public override void OnEnter()
+    {
     }
 }

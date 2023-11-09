@@ -24,8 +24,25 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     private readonly ChessInput _input;
     private readonly Rail _promptRail = new();
     private readonly UiState _uiState;
-    private bool _isEditMode;
     private readonly BoardData _boardData;
+    private Session? _currentSession;
+
+    public bool IsEditMode => CurrentSession is EditorSession;
+
+    private Session? CurrentSession
+    {
+        get
+        {
+            return _currentSession;
+        }
+
+        set
+        {
+            _currentSession?.OnExit();
+            _currentSession = value;
+            value?.OnEnter();
+        }
+    }
 
     public ChessCartridge(IRuntime runtime) : base(runtime)
     {
@@ -36,7 +53,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         var board = new ChessBoard(_boardData);
         var gameState = new ChessGameState(board, _boardData);
         _diegeticUi = new DiegeticUi(_uiState, board, _assets, _input, _boardData);
-        _overlayUi = new OverlayUi(gameState, runtime, _boardData, () =>_isEditMode);
+        _overlayUi = new OverlayUi(gameState, runtime, _boardData, () => IsEditMode);
         var spawnPrompt = new PromotionPrompt(gameState, runtime, _assets, true, new List<string>
         {
             nameof(PieceType.Pawn),
@@ -77,6 +94,8 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         _input.DragInitiated += DragInitiated;
         _input.DragSucceeded += DragSucceeded;
         _input.DragFinished += DragFinished;
+
+        CurrentSession = _gameSession;
     }
 
     public override CartridgeConfig CartridgeConfig => new(Constants.RenderResolution, SamplerState.AnisotropicWrap);
@@ -88,50 +107,22 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
 
     private void DragFinished(Point? position)
     {
-        if (_isEditMode)
-        {
-            _editorSession.DragFinished(position);
-        }
-        else
-        {
-            _gameSession.DragFinished(position);
-        }
+        CurrentSession?.DragFinished(position);
     }
 
     private void DragInitiated(Point position)
     {
-        if (_isEditMode)
-        {
-            _editorSession.DragInitiated(position);
-        }
-        else
-        {
-            _gameSession.DragInitiated(position);
-        }
+        CurrentSession?.DragInitiated(position);
     }
 
     private void DragSucceeded(Point dragStart, Point position)
     {
-        if (_isEditMode)
-        {
-            _editorSession.DragSucceeded(dragStart, position);
-        }
-        else
-        {
-            _gameSession.DragSucceeded(dragStart, position);
-        }
+        CurrentSession?.DragSucceeded(dragStart, position);
     }
 
     private void ClickOn(Point position, MouseButton mouseButton)
     {
-        if (_isEditMode)
-        {
-            _editorSession.ClickOn(position, mouseButton);
-        }
-        else
-        {
-            _gameSession.ClickOn(position, mouseButton);
-        }
+        CurrentSession?.ClickOn(position, mouseButton);
     }
 
     public override void OnCartridgeStarted()
@@ -140,20 +131,20 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
 
     public override void UpdateInput(ConsumableInput input, HitTestStack screenLayer)
     {
-        if (input.Keyboard.GetButton(Keys.Q).WasPressed)
+        if (input.Keyboard.GetButton(Keys.F4).WasPressed)
         {
-            _isEditMode = !_isEditMode;
+            if (IsEditMode)
+            {
+                CurrentSession = _gameSession;
+            }
+            else
+            {
+                CurrentSession = _editorSession;
+            }
             _uiState.SelectedPiece = null;
         }
-
-        if (_isEditMode)
-        {
-            _editorSession.UpdateInput(input, screenLayer);
-        }
-        else
-        {
-            _gameSession.UpdateInput(input, screenLayer);
-        }
+        
+        CurrentSession?.UpdateInput(input, screenLayer);
 
         var worldLayer = screenLayer.AddLayer(_camera.ScreenToCanvas, Depth.Middle);
         var overlayLayer = screenLayer.AddLayer(Matrix.Identity, Depth.Middle - 100);
@@ -222,7 +213,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         painter.BeginSpriteBatch(_camera.CanvasToScreen);
         var extraDesaturate = 0f;
 
-        if (_isEditMode)
+        if (IsEditMode)
         {
             extraDesaturate = 0.25f;
         }
