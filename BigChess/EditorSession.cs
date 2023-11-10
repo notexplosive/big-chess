@@ -145,5 +145,6 @@ public class EditorSession : Session
         yield return _savePrompt;
         yield return _openPrompt;
         yield return _spawnPrompt;
+        yield return _editorCommandsPrompt;
     }
 }
