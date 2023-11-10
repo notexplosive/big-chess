@@ -16,33 +16,16 @@ namespace BigChess;
 public class ChessCartridge : BasicGameCartridge, IHotReloadable
 {
     private readonly Assets _assets;
+    private readonly BoardData _boardData;
     private readonly Camera _camera;
     private readonly DiegeticUi _diegeticUi;
-    private readonly OverlayUi _overlayUi;
     private readonly EditorSession _editorSession;
     private readonly GameSession _gameSession;
     private readonly ChessInput _input;
+    private readonly OverlayUi _overlayUi;
     private readonly Rail _promptRail = new();
     private readonly UiState _uiState;
-    private readonly BoardData _boardData;
     private Session? _currentSession;
-
-    public bool IsEditMode => CurrentSession is EditorSession;
-
-    private Session? CurrentSession
-    {
-        get
-        {
-            return _currentSession;
-        }
-
-        set
-        {
-            _currentSession?.OnExit();
-            _currentSession = value;
-            value?.OnEnter();
-        }
-    }
 
     public ChessCartridge(IRuntime runtime) : base(runtime)
     {
@@ -98,6 +81,20 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         CurrentSession = _gameSession;
     }
 
+    public bool IsEditMode => CurrentSession is EditorSession;
+
+    private Session? CurrentSession
+    {
+        get => _currentSession;
+
+        set
+        {
+            _currentSession?.OnExit();
+            _currentSession = value;
+            value?.OnEnter();
+        }
+    }
+
     public override CartridgeConfig CartridgeConfig => new(Constants.RenderResolution, SamplerState.AnisotropicWrap);
 
     public void OnHotReload()
@@ -141,15 +138,16 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             {
                 CurrentSession = _editorSession;
             }
+
             _uiState.SelectedPiece = null;
         }
-        
+
         CurrentSession?.UpdateInput(input, screenLayer);
 
         var worldLayer = screenLayer.AddLayer(_camera.ScreenToCanvas, Depth.Middle);
         var overlayLayer = screenLayer.AddLayer(Matrix.Identity, Depth.Middle - 100);
         var promptsLayer = screenLayer.AddLayer(Matrix.Identity, Depth.Middle - 200);
-        
+
         HandleCameraControls(input, worldLayer);
 
         worldLayer.AddInfiniteZone(Depth.Back, () => _input.OnHoverVoid(input));
@@ -158,7 +156,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
             worldLayer.AddZone(boardRectangle.PixelRect, Depth.Middle,
                 () => { _input.SetHoveredSquare(input, boardRectangle.GridPosition); });
         }
-        
+
         _overlayUi.UpdateInput(input, overlayLayer);
         _promptRail.UpdateInput(input, promptsLayer);
         _diegeticUi.UpdateInput(input, worldLayer);
@@ -166,6 +164,17 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
 
     private void HandleCameraControls(ConsumableInput input, HitTestStack layer)
     {
+        var windowRectangle = Runtime.Window.RenderResolution.ToRectangleF();
+        var boardRectangle = _boardData.TotalBoardSizePixels().ToRectangleF();
+        if (windowRectangle.Envelopes(boardRectangle))
+        {
+            var aspectRatio = windowRectangle.Size.AspectRatio();
+            var cameraViewSize = new Vector2(aspectRatio * boardRectangle.LongSide, boardRectangle.LongSide);
+            var cameraOffset = RectangleF.FromSizeAlignedWithin(cameraViewSize.ToRectangleF(), boardRectangle.Size, Alignment.Center).Location;
+            _camera.ViewBounds = new RectangleF(-cameraOffset, cameraViewSize);
+            return;
+        }
+
         if (input.Mouse.GetButton(MouseButton.Middle, true).IsDown)
         {
             _camera.ViewBounds = _camera.ViewBounds.Moved(-input.Mouse.Delta(layer.WorldMatrix));
@@ -186,8 +195,9 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
                 input.Mouse.Position(layer.WorldMatrix));
         }
 
-        _camera.ViewBounds = _camera.ViewBounds.ConstrainedTo(_boardData.TotalBoardSizePixels().ToRectangleF()
-            .Inflated(_camera.ViewBounds.Width - Constants.TileSizePixels, _camera.ViewBounds.Height - Constants.TileSizePixels));
+        _camera.ViewBounds = _camera.ViewBounds.ConstrainedTo(boardRectangle
+            .Inflated(_camera.ViewBounds.Width - Constants.TileSizePixels,
+                _camera.ViewBounds.Height - Constants.TileSizePixels));
     }
 
     public override void Update(float dt)
