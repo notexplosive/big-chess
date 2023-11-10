@@ -211,7 +211,15 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     {
         _promptRail.EarlyDraw(painter);
 
-        painter.Clear(Color.Blue.DesaturatedBy(0.8f));
+        if (IsEditMode)
+        {
+            painter.Clear(Color.DarkRed.DesaturatedBy(0.8f));
+        }
+        else
+        {
+            painter.Clear(Color.Blue.DesaturatedBy(0.8f));
+        }
+
         DrawBoard(painter);
         _diegeticUi.Draw(painter, _camera.CanvasToScreen);
         _overlayUi.Draw(painter);

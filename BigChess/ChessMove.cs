@@ -4,15 +4,15 @@ namespace BigChess;
 
 public class ChessMove
 {
-    public ChessMove(ChessPiece pieceBeforeMove, Point position)
+    public ChessMove(ChessPiece pieceBeforeMove, Point finalPosition)
     {
         PieceBeforeMove = pieceBeforeMove;
-        Position = position;
+        FinalPosition = finalPosition;
     }
 
     public ChessPiece PieceBeforeMove { get; }
-    public ChessPiece PieceAfterMove => PieceBeforeMove with {Position = Position};
-    public Point Position { get; }
+    public ChessPiece PieceAfterMove => PieceBeforeMove with {Position = FinalPosition};
+    public Point FinalPosition { get; }
     public ChessMove? NextMove { get; init; }
 
     public static ChessMove Normal(ChessPiece pieceBeforeMove, Point position)

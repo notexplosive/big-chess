@@ -88,7 +88,7 @@ public class PieceRenderer : AnimatedObject
 
     public ChessPiece? GetPiece()
     {
-        return _board.GetPieceFromId(PieceId);
+        return _board.Pieces.GetPieceFromId(PieceId);
     }
 
     public override void Update(float dt)

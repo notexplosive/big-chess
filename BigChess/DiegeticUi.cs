@@ -34,10 +34,10 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
         _chessInput = chessInput;
         _boardData = boardData;
         _uiState.SelectionChanged += SelectionChanged;
-        _board.PieceAdded += OnPieceAdded;
-        _board.PieceCaptured += OnPieceCaptured;
-        _board.PieceDeleted += OnPieceDeleted;
-        _board.PieceMoved += OnPieceMoved;
+        _board.Pieces.PieceAdded += OnPieceAdded;
+        _board.Pieces.PieceCaptured += OnPieceCaptured;
+        _board.Pieces.PieceDeleted += OnPieceDeleted;
+        _board.Pieces.PieceMoved += OnPieceMoved;
         _board.PiecePromoted += OnPiecePromoted;
         _chessInput.SquareHovered += OnSquareHovered;
         _chessInput.DragFinished += OnDragFinished;
@@ -105,7 +105,7 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
     {
         if (_pieceRenderers.TryGetValue(move.PieceBeforeMove.Id, out var result))
         {
-            result.AnimateMove(_tween, move.PieceBeforeMove, move.Position, _chessInput);
+            result.AnimateMove(_tween, move.PieceBeforeMove, move.FinalPosition, _chessInput);
         }
     }
 
@@ -139,18 +139,18 @@ public class DiegeticUi : IUpdateHook, IUpdateInputHook
             var startingPosition = piece.Value.Position;
             _selection = _animatedObjects.Add(new SelectedSquare(startingPosition));
 
-            foreach (var landingPosition in piece.Value.GetValidMoves(_board))
+            foreach (var landingPosition in piece.Value.GetPermittedMoves(_board))
             {
-                if (_board.GetPieceAt(landingPosition.Position) != null)
+                if (_board.Pieces.GetPieceAt(landingPosition.FinalPosition) != null)
                 {
                     _targetSquares.Add(
-                        _animatedObjects.Add(new AttackSquare(startingPosition, landingPosition.Position)));
+                        _animatedObjects.Add(new AttackSquare(startingPosition, landingPosition.FinalPosition)));
                 }
 
-                if (_boardData.IsWithinBoard(landingPosition.Position))
+                if (_boardData.IsWithinBoard(landingPosition.FinalPosition))
                 {
-                    var delay = (startingPosition.ToVector2() - landingPosition.Position.ToVector2()).Length() / 100f;
-                    _targetSquares.Add(_animatedObjects.Add(new MoveSquare(landingPosition.Position, delay)));
+                    var delay = (startingPosition.ToVector2() - landingPosition.FinalPosition.ToVector2()).Length() / 100f;
+                    _targetSquares.Add(_animatedObjects.Add(new MoveSquare(landingPosition.FinalPosition, delay)));
                 }
             }
         }

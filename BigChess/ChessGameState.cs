@@ -56,7 +56,7 @@ public class ChessGameState
             return;
         }
 
-        _board.ForceMovePiece(move);
+        _board.Pieces.ExecuteMove(move);
         
         var piece = move.PieceAfterMove;
         if (piece.PieceType == PieceType.Pawn && !_boardData.IsWithinBoard(piece.Position + Constants.Forward(piece.Color)))

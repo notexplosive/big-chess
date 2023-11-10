@@ -32,7 +32,7 @@ public class GameSession : Session
 
     public override void DragInitiated(Point position)
     {
-        var piece = _board.GetPieceAt(position);
+        var piece = _board.Pieces.GetPieceAt(position);
 
         if (IsSelectable(piece))
         {
@@ -60,14 +60,14 @@ public class GameSession : Session
     public override void ClickOn(Point position, MouseButton mouseButton)
     {
         _diegeticUi.ClearDrag();
-        var piece = _board.GetPieceAt(position);
+        var piece = _board.Pieces.GetPieceAt(position);
 
         if (piece == _uiState.SelectedPiece)
         {
             return;
         }
 
-        var move = GetSelectedPieceValidMoveTo(position);
+        var move = GetMoveForSelectedPiece(position);
         if (move != null)
         {
             _gameState.RequestMovePiece(move);
@@ -82,27 +82,28 @@ public class GameSession : Session
         }
     }
 
-    private ChessMove? GetSelectedPieceValidMoveTo(Point position)
+    private ChessMove? GetMoveForSelectedPiece(Point position)
     {
-        if (_uiState.SelectedPiece.HasValue)
+        if (!_uiState.SelectedPiece.HasValue)
         {
-            var selectedPiece = _uiState.SelectedPiece.Value;
-            var validMoves = selectedPiece.GetValidMoves(_board);
-            var index = validMoves.FindIndex(move => move.Position == position);
-            if (index == -1)
-            {
-                return null;
-            }
-
-            return validMoves[index];
+            return null;
         }
 
-        return null;
+        var selectedPiece = _uiState.SelectedPiece.Value;
+        var validMoves = selectedPiece.GetPermittedMoves(_board);
+        var index = validMoves.FindIndex(move => move.FinalPosition == position);
+        if (index == -1)
+        {
+            return null;
+        }
+
+        return validMoves[index];
+
     }
 
     public override void DragSucceeded(Point dragStart, Point position)
     {
-        var move = GetSelectedPieceValidMoveTo(position);
+        var move = GetMoveForSelectedPiece(position);
         if (move != null)
         {
             _gameState.RequestMovePiece(move);

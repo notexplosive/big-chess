@@ -48,22 +48,22 @@ public class EditorCommandsPrompt : ButtonListPrompt
     {
         var oppositeColor = Constants.OppositeColor(color);
 
-        var ids = _chessBoard.GetAllIds().ToList();
+        var ids = _chessBoard.Pieces.GetAllIds().ToList();
 
         foreach (var id in ids)
         {
-            if (_chessBoard.GetPieceFromId(id)!.Value.Color == oppositeColor)
+            if (_chessBoard.Pieces.GetPieceFromId(id)!.Value.Color == oppositeColor)
             {
-                _chessBoard.DeletePiece(id);
+                _chessBoard.Pieces.DeletePiece(id);
             }
         }
 
         // refresh list, post cull
-        ids = _chessBoard.GetAllIds().ToList();
+        ids = _chessBoard.Pieces.GetAllIds().ToList();
 
         foreach (var id in ids)
         {
-            var piece = _chessBoard.GetPieceFromId(id)!.Value;
+            var piece = _chessBoard.Pieces.GetPieceFromId(id)!.Value;
             var newY = _boardData.BoardLength - piece.Position.Y - 1;
 
             if (piece.Position.Y > _boardData.BoardLength / 2)
@@ -73,9 +73,9 @@ public class EditorCommandsPrompt : ButtonListPrompt
 
             var newPosition = new Point(piece.Position.X, newY);
 
-            if (_chessBoard.GetPieceAt(newPosition) == null)
+            if (_chessBoard.Pieces.GetPieceAt(newPosition) == null)
             {
-                _chessBoard.AddPiece(new ChessPiece
+                _chessBoard.Pieces.AddPiece(new ChessPiece
                     {Color = oppositeColor, PieceType = piece.PieceType, Position = newPosition});
             }
             else

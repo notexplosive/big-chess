@@ -39,7 +39,7 @@ public class EditorSession : Session
 
     public override void DragInitiated(Point position)
     {
-        var piece = _board.GetPieceAt(position);
+        var piece = _board.Pieces.GetPieceAt(position);
 
         if (piece != null)
         {
@@ -53,13 +53,13 @@ public class EditorSession : Session
         {
             _spawnPrompt.Request(pieceType =>
             {
-                _board.AddPiece(new ChessPiece
+                _board.Pieces.AddPiece(new ChessPiece
                     {PieceType = pieceType, Position = position, Color = _gameState.CurrentTurn});
             });
         }
         else if (mouseButton == MouseButton.Right)
         {
-            _board.CapturePiece(_board.GetPieceAt(position)!.Value.Id);
+            _board.Pieces.CapturePiece(_board.Pieces.GetPieceAt(position)!.Value.Id);
         }
     }
 
@@ -68,11 +68,11 @@ public class EditorSession : Session
         var id = _diegeticUi.DraggedId;
         if (id.HasValue)
         {
-            var piece = _board.GetPieceFromId(id.Value);
+            var piece = _board.Pieces.GetPieceFromId(id.Value);
 
             if (piece.HasValue)
             {
-                _board.ForceMovePiece(new ChessMove(piece.Value, position));
+                _board.Pieces.ExecuteMove(new ChessMove(piece.Value, position));
             }
         }
     }
@@ -99,7 +99,7 @@ public class EditorSession : Session
                     {
                         var json = JsonConvert.SerializeObject(new SerializedScenario
                         {
-                            Board = _board.Serialize(),
+                            Board = _board.Pieces.Serialize(),
                             BoardData = _boardData.Serialize()
                         }, Formatting.Indented);
                         _scenarioFiles.WriteToFile(fileName, json);
@@ -111,7 +111,7 @@ public class EditorSession : Session
                     _openPrompt.Request(scenario =>
                     {
                         _boardData.PopulateFromScenario(scenario);
-                        _board.PopulateFromScenario(scenario);
+                        _board.Pieces.PopulateFromScenario(scenario);
                     });
                 }
             }
