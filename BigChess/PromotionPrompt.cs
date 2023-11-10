@@ -99,7 +99,7 @@ public class PromotionPrompt : Prompt
 
     public override void Cancel()
     {
-        // this does nothing, this prompt is not cancellable
+        _bufferedCallback = null;
     }
 
     public override void Update(float dt)
