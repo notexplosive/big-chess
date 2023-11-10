@@ -86,7 +86,7 @@ public class EditorSession : Session
     {
         if (input.Keyboard.GetButton(Keys.Tab).WasPressed)
         {
-            _gameState.NextTurn();
+            _gameState.ForceNextTurn();
         }
 
         if (!IsPromptOpen())

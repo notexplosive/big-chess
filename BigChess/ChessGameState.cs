@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using ExplogineMonoGame;
 
 namespace BigChess;
@@ -41,11 +42,43 @@ public class ChessGameState
 
     public event Action<ChessPiece>? PromotionRequested;
     public event Action<PieceColor>? TurnChanged;
+    public event Action<PieceColor,bool>? GameEnded;
     public event Action? ActionCompleted;
 
     public void NextTurn()
     {
+        var newTurnPlayer = Constants.OppositeColor(CurrentTurn);
+
+        if (_board.HasValidMove(newTurnPlayer))
+        {
+            ForceNextTurn();
+        }
+        else
+        {
+            if (_board.IsInCheck(newTurnPlayer))
+            {
+                Victory();
+            }
+            else
+            {
+                Stalemate();
+            }
+        }
+    }
+
+    public void ForceNextTurn()
+    {
         CurrentTurn = Constants.OppositeColor(CurrentTurn);
+    }
+
+    private void Stalemate()
+    {
+        GameEnded?.Invoke(CurrentTurn, false);
+    }
+
+    private void Victory()
+    {
+        GameEnded?.Invoke(CurrentTurn, true);
     }
 
     public void RequestMovePiece(ChessMove move)
@@ -53,6 +86,12 @@ public class ChessGameState
         if (PendingPromotionId != -1)
         {
             Client.Debug.LogWarning("Attempted to move during pending promotion");
+            return;
+        }
+
+        if (PendingActionPoints <= 0)
+        {
+            Client.Debug.LogWarning("Attempted to move without action points");
             return;
         }
 

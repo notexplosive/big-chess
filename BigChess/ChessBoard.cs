@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using ExplogineMonoGame;
 using Microsoft.Xna.Framework;
 
@@ -82,5 +84,22 @@ public class ChessBoard
         {
             Pieces = Pieces.Clone()
         };
+    }
+
+    public bool HasValidMove(PieceColor color)
+    {
+        foreach (var piece in Pieces.All())
+        {
+            if (piece.Color == color)
+            {
+                if(piece.GetPermittedMoves(this).Count > 0)
+                {
+                    // If we found ANY valid move
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
 }

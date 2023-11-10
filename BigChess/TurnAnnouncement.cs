@@ -9,15 +9,17 @@ namespace BigChess;
 internal class TurnAnnouncement : AnimatedObject
 {
     private readonly PieceColor _color;
+    private readonly string _text;
     private readonly Point _windowSize;
     private readonly TweenableFloat _barScale = new(1);
     private readonly TweenableFloat _opacity = new(0);
     private readonly TweenableFloat _textScale = new(1);
     private readonly SequenceTween _tween = new();
 
-    public TurnAnnouncement(PieceColor color, Point windowSize)
+    public TurnAnnouncement(PieceColor color, string text, Point windowSize, bool hasFadeOut)
     {
         _color = color;
+        _text = text;
         _windowSize = windowSize;
         var phase1 = 0.15f;
         var phase2 = 0.25f;
@@ -33,15 +35,21 @@ internal class TurnAnnouncement : AnimatedObject
                 new MultiplexTween()
                     .AddChannel(_barScale.TweenTo(1f, phase2, Ease.CubicFastSlow))
             )
-            .Add(new WaitSecondsTween(0.5f))
-            .Add(
-                new MultiplexTween()
-                    .AddChannel(_opacity.TweenTo(0f, phase3 / 4f, Ease.Linear))
-                    .AddChannel(_barScale.TweenTo(2f, phase3, Ease.CubicFastSlow))
-                    .AddChannel(_textScale.TweenTo(1.25f, phase3, Ease.CubicFastSlow))
-            )
-            .Add(new CallbackTween(Destroy))
             ;
+
+        if (hasFadeOut)
+        {
+            _tween
+                .Add(new WaitSecondsTween(0.5f))
+                .Add(
+                    new MultiplexTween()
+                        .AddChannel(_opacity.TweenTo(0f, phase3 / 4f, Ease.Linear))
+                        .AddChannel(_barScale.TweenTo(2f, phase3, Ease.CubicFastSlow))
+                        .AddChannel(_textScale.TweenTo(1.25f, phase3, Ease.CubicFastSlow))
+                )
+                .Add(new CallbackTween(Destroy))
+                ;
+        }
     }
 
     public override void DrawScaled(Painter painter)
@@ -56,7 +64,7 @@ internal class TurnAnnouncement : AnimatedObject
         barRectangle = barRectangle.Inflated(barRectangle.Width * _barScale / 4f, barRectangle.Height * _barScale / 4f);
         painter.DrawRectangle(barRectangle, new DrawSettings {Color = backgroundColor, Depth = Depth.Middle});
         painter.DrawStringWithinRectangle(Client.Assets.GetFont("engine/logo-font", (int) (120 * _textScale)),
-            $"{_color} to move", barRectangle, Alignment.Center,
+            _text, barRectangle, Alignment.Center,
             new DrawSettings {Color = textColor, Depth = Depth.Middle - 100});
     }
 

@@ -21,6 +21,7 @@ public class OverlayUi : IUpdateHook, IUpdateInputHook, IDrawHook
         _animatedObjects.Add(new ActionPointsCounter(gameState, runtime, boardData));
 
         gameState.TurnChanged += AnnounceTurn;
+        gameState.GameEnded += AnnounceGameEnd;
     }
 
     private readonly AnimatedObjectCollection _animatedObjects = new();
@@ -51,7 +52,15 @@ public class OverlayUi : IUpdateHook, IUpdateInputHook, IDrawHook
     {
         if (!_isEditMode())
         {
-            _animatedObjects.Add(new TurnAnnouncement(color, _runtime.Window.RenderResolution));
+            _animatedObjects.Add(new TurnAnnouncement(color, $"{color} to move", _runtime.Window.RenderResolution, true));
+        }
+    }
+
+    private void AnnounceGameEnd(PieceColor color, bool wasVictory)
+    {
+        if (!_isEditMode())
+        {
+            _animatedObjects.Add(new TurnAnnouncement(color, wasVictory ? $"{color} Wins!" : "Stalemate!", _runtime.Window.RenderResolution, false));
         }
     }
 }
