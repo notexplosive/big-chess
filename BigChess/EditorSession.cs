@@ -63,7 +63,7 @@ public class EditorSession : Session
         }
     }
 
-    public override void DragSucceeded(Point dragStart, Point position)
+    public override void DragSucceeded(Point position)
     {
         var id = _diegeticUi.DraggedId;
         if (id.HasValue)

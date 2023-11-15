@@ -101,7 +101,7 @@ public class GameSession : Session
 
     }
 
-    public override void DragSucceeded(Point dragStart, Point position)
+    public override void DragSucceeded(Point position)
     {
         var move = GetMoveForSelectedPiece(position);
         if (move != null)

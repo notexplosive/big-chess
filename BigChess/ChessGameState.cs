@@ -45,7 +45,7 @@ public class ChessGameState
     public event Action<PieceColor,bool>? GameEnded;
     public event Action? ActionCompleted;
 
-    public void NextTurn()
+    private void EndTurn()
     {
         var newTurnPlayer = Constants.OppositeColor(CurrentTurn);
 
@@ -124,7 +124,7 @@ public class ChessGameState
 
         if (PendingActionPoints <= 0)
         {
-            NextTurn();
+            EndTurn();
         }
     }
 }

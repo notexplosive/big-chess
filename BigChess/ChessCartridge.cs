@@ -114,7 +114,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
 
     private void DragSucceeded(Point dragStart, Point position)
     {
-        CurrentSession?.DragSucceeded(dragStart, position);
+        CurrentSession?.DragSucceeded(position);
     }
 
     private void ClickOn(Point position, MouseButton mouseButton)
