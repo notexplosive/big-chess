@@ -1,6 +1,7 @@
 ﻿namespace NetChess;
 
+[Serializable]
 public class JoinMessage : ClientMessage<JoinMessage>
 {
-    public int Id { get; set; }
+    public RemoteId Id { get; set; }
 }

@@ -6,24 +6,24 @@ namespace NetChess;
 
 public class RemoteClient : Client
 {
+    private static int IdPool;
+
     public RemoteClient(NetPeer peer)
     {
         Peer = peer;
     }
 
     public NetPeer Peer { get; }
-    public int Id { get; } = RemoteClient.IdPool++;
-    
-    public static int IdPool = 0;
+    public RemoteId Id { get; } = RemoteId.Client(RemoteClient.IdPool++);
 
-    private void SendString(int senderId, string content)
+    private void SendString(RemoteId senderId, string content)
     {
         var writer = new NetDataWriter();
         writer.Put($"{senderId}: {content}");
         Peer.Send(writer, DeliveryMethod.ReliableOrdered);
     }
 
-    public void SendObject(int senderId, IClientMessage message)
+    public void SendObject(RemoteId senderId, IClientMessage message)
     {
         Console.WriteLine($"Sending {message.GetType().Name} to {Id}");
         SendString(senderId, $"{JsonConvert.SerializeObject(message)}");
@@ -31,6 +31,6 @@ public class RemoteClient : Client
 
     public void SendFromServer(IClientMessage message)
     {
-        SendObject(-1, message);
+        SendObject(RemoteId.Server, message);
     }
 }

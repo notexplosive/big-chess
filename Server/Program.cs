@@ -12,9 +12,9 @@ foreach (var type in Reflection.GetAllTypesThatDeriveFrom<IClientMessage>())
     Console.WriteLine(TypeUtilities.GetTypeName(type));
 }
 
-var nameLookup = new Dictionary<int, string>();
+var nameLookup = new Dictionary<RemoteId, string>();
 
-string LookupSenderName(int id)
+string LookupSenderName(RemoteId id)
 {
     return nameLookup.TryGetValue(id, out var value) ? value : "???";
 }

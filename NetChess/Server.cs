@@ -66,12 +66,12 @@ public class Server
         };
     }
 
-    private void OnMessage(int senderId, IClientMessage payload, RemoteClientCollection remoteClients)
+    private void OnMessage(RemoteId senderId, IClientMessage payload, RemoteClientCollection remoteClients)
     {
         MessageReceived?.Invoke(senderId, payload, remoteClients);
     }
 
-    public event Action<int, IClientMessage, RemoteClientCollection>? MessageReceived;
+    public event Action<RemoteId, IClientMessage, RemoteClientCollection>? MessageReceived;
 
     public void Start(int port)
     {

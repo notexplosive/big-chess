@@ -11,9 +11,9 @@ public class RemoteClientCollection
         return _content.Find(client => client.Peer == fromPeer);
     }
 
-    public int PeerToId(NetPeer fromPeer)
+    public RemoteId PeerToId(NetPeer fromPeer)
     {
-        var sourceId = -1;
+        var sourceId = RemoteId.Server;
         var sourceClient = PeerToClient(fromPeer);
 
         if (sourceClient != null)
@@ -47,22 +47,26 @@ public class RemoteClientCollection
     {
         foreach (var client in _content)
         {
-            client.SendObject(-1, message);
+            client.SendObject(RemoteId.Server, message);
         }
     }
 
-    public void SendToClientFromServer(int targetId, IClientMessage message)
+    public void SendToClientFromServer(RemoteId targetId, IClientMessage message)
     {
         var source = FindFromId(targetId);
-        source?.SendObject(-1, message);
+        source?.SendObject(RemoteId.Server, message);
     }
 
-    public RemoteClient? FindFromId(int clientId)
+    public RemoteClient? FindFromId(RemoteId clientId)
     {
+        if (clientId.IsServer)
+        {
+            return null;
+        }
         return _content.Find(a => a.Id == clientId);
     }
 
-    public void BroadcastFromClient(int originalSenderId, IClientMessage message)
+    public void BroadcastFromClient(RemoteId originalSenderId, IClientMessage message)
     {
         foreach (var client in _content)
         {

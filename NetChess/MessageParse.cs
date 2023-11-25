@@ -6,7 +6,7 @@ public class MessageParse
     {
         // message format is "<id>: <payload_as_json>"
         var splitColons = message.Split(':').ToList();
-        var senderId = int.Parse(splitColons[0]);
+        var senderId = RemoteId.Parse(splitColons[0]);
         splitColons.RemoveAt(0);
 
         var payload = string.Join(':', splitColons);
@@ -27,12 +27,12 @@ public class MessageParse
 
     public interface IParseResult
     {
-        int SenderId { get; }
+        RemoteId SenderId { get; }
     }
 
     public class SuccessfulParseResult : IParseResult
     {
-        public SuccessfulParseResult(int senderId, IClientMessage payload, Type payloadType)
+        public SuccessfulParseResult(RemoteId senderId, IClientMessage payload, Type payloadType)
         {
             SenderId = senderId;
             Payload = payload;
@@ -41,12 +41,12 @@ public class MessageParse
 
         public IClientMessage Payload { get; }
         public Type PayloadType { get; }
-        public int SenderId { get; }
+        public RemoteId SenderId { get; }
     }
 
     public class FailedParseResult : IParseResult
     {
-        public FailedParseResult(int senderId, string errorText, string rawPayload)
+        public FailedParseResult(RemoteId senderId, string errorText, string rawPayload)
         {
             SenderId = senderId;
             ErrorText = errorText;
@@ -55,6 +55,6 @@ public class MessageParse
 
         public string ErrorText { get; }
         public string RawPayload { get; }
-        public int SenderId { get; }
+        public RemoteId SenderId { get; }
     }
 }

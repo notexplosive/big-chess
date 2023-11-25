@@ -58,7 +58,7 @@ public class ConsoleGame
         client.Stop();
     }
 
-    private void OnMessage(int id, IClientMessage message)
+    private void OnMessage(RemoteId id, IClientMessage message)
     {
         if (message is ChatMessageFromServer chatMessage)
         {
@@ -66,19 +66,19 @@ public class ConsoleGame
         }
         else if (message is ConfirmName confirmName)
         {
-            Console.WriteLine($"Your name is now {confirmName.Name}");
+            Console.WriteLine($"{id}: Your name is now {confirmName.Name}");
         }
         else if (message is IdIssuedMessage idIssuedMessage)
         {
-            Console.WriteLine($"Your were issued the ID: {idIssuedMessage.Id}");
+            Console.WriteLine($"{id}: Your were issued the ID: {idIssuedMessage.Id}");
         }
         else if (message is JoinMessage joinMessage)
         {
-            Console.WriteLine($"{joinMessage.Id} has joined the chat");
+            Console.WriteLine($"{id}: {joinMessage.Id} has joined the chat");
         }
         else if (message is LeaveMessage leaveMessage)
         {
-            Console.WriteLine($"{leaveMessage.Id} has left the chat by {leaveMessage.Reason}");
+            Console.WriteLine($"{id}: {leaveMessage.Id} has left the chat by {leaveMessage.Reason}");
         }
         else
         {

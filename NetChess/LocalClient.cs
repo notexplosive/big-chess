@@ -9,7 +9,7 @@ public class LocalClient : Client
     private readonly NetManager _client;
     private readonly NetPeer _server;
 
-    public event Action<int, IClientMessage>? ReceivedMessage;
+    public event Action<RemoteId, IClientMessage>? ReceivedMessage;
     public event Action? Disconnected;
 
     public LocalClient(string ip, int targetPort, string connectionKey)
