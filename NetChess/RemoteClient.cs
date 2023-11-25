@@ -4,7 +4,11 @@ using Newtonsoft.Json;
 
 namespace NetChess;
 
-public class RemoteClient : Client
+
+/// <summary>
+/// Serverside representation of a client
+/// </summary>
+public class RemoteClient : ClientMessageTypeOwner
 {
     private static int IdPool;
 

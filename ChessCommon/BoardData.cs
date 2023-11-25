@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using BigChess;
 using ExplogineMonoGame.Data;
 using Microsoft.Xna.Framework;
 
-namespace BigChess;
+namespace ChessCommon;
 
 [Serializable]
 public class BoardData

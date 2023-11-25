@@ -1,10 +1,8 @@
-using System;
-using ExplogineMonoGame;
 using ExplogineMonoGame.Data;
 using ExplogineMonoGame.Gui;
 using Microsoft.Xna.Framework;
 
-namespace BigChess;
+namespace ChessCommon;
 
 public static class Constants
 {

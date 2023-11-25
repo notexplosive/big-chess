@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using ChessCommon;
 using ExplogineMonoGame;
 using ExplogineMonoGame.Data;
 using ExTween;

@@ -1,4 +1,5 @@
 ﻿using System;
+using ChessCommon;
 using Newtonsoft.Json;
 
 namespace BigChess;

@@ -1,7 +1,7 @@
-﻿using System;
+﻿using BigChess;
 using Newtonsoft.Json;
 
-namespace BigChess;
+namespace ChessCommon;
 
 [Serializable]
 public class SerializedChessPiece

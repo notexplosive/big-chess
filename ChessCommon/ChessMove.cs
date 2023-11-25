@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace BigChess;
+namespace ChessCommon;
 
 public class ChessMove
 {

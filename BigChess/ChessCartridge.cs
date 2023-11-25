@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ChessCommon;
 using ExplogineCore;
 using ExplogineCore.Data;
 using ExplogineMonoGame;
@@ -10,6 +11,7 @@ using ExplogineMonoGame.Rails;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using NetChess;
 
 namespace BigChess;
 
@@ -26,6 +28,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
     private readonly Rail _promptRail = new();
     private readonly UiState _uiState;
     private Session? _currentSession;
+    private LocalClient? _localClient;
 
     public ChessCartridge(IRuntime runtime) : base(runtime)
     {
@@ -124,6 +127,32 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
 
     public override void OnCartridgeStarted()
     {
+        var hasPort = Client.Args.HasValue("port");
+        var hasServer = Client.Args.HasValue("server");
+        if (hasPort != hasServer)
+        {
+            Client.Debug.LogWarning("Invalid command line parameters: port and server");
+        }
+
+        if (hasPort && hasServer)
+        {
+            _localClient = new LocalClient(Client.Args.GetValue<string>("server"), Client.Args.GetValue<int>("port"),
+                "Chess4TheWin");
+
+            _localClient.ReceivedMessage += ReceivedNetworkMessage;
+            _localClient.Disconnected += AttemptRestart;
+        }
+    }
+
+    private void AttemptRestart()
+    {
+        Client.Debug.Log("Lost connection, attempting to reconnect");
+        _localClient?.Restart();
+    }
+
+    private void ReceivedNetworkMessage(RemoteId remoteId, IClientMessage message)
+    {
+        Client.Debug.Log(remoteId, message);
     }
 
     public override void UpdateInput(ConsumableInput input, HitTestStack screenLayer)
@@ -170,7 +199,8 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         {
             var aspectRatio = windowRectangle.Size.AspectRatio();
             var cameraViewSize = new Vector2(aspectRatio * boardRectangle.LongSide, boardRectangle.LongSide);
-            var cameraOffset = RectangleF.FromSizeAlignedWithin(cameraViewSize.ToRectangleF(), boardRectangle.Size, Alignment.Center).Location;
+            var cameraOffset = RectangleF
+                .FromSizeAlignedWithin(cameraViewSize.ToRectangleF(), boardRectangle.Size, Alignment.Center).Location;
             _camera.ViewBounds = new RectangleF(-cameraOffset, cameraViewSize);
             return;
         }
@@ -205,6 +235,7 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
         _diegeticUi.Update(dt);
         _overlayUi.Update(dt);
         _promptRail.Update(dt);
+        _localClient?.Update();
     }
 
     public override void Draw(Painter painter)
@@ -269,6 +300,8 @@ public class ChessCartridge : BasicGameCartridge, IHotReloadable
 
     public override void AddCommandLineParameters(CommandLineParametersWriter parameters)
     {
+        parameters.RegisterParameter<string>("server");
+        parameters.RegisterParameter<int>("port");
     }
 
     public override IEnumerable<ILoadEvent> LoadEvents(Painter painter)

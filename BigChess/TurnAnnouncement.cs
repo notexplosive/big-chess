@@ -1,4 +1,5 @@
-﻿using ExplogineCore.Data;
+﻿using ChessCommon;
+using ExplogineCore.Data;
 using ExplogineMonoGame;
 using ExplogineMonoGame.Data;
 using ExTween;

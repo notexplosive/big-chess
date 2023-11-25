@@ -1,4 +1,4 @@
-namespace BigChess;
+namespace ChessCommon;
 
 public enum PieceType
 {

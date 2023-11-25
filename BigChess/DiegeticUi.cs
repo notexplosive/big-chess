@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
+using ChessCommon;
 using ExplogineMonoGame;
 using ExplogineMonoGame.AssetManagement;
 using ExplogineMonoGame.Data;

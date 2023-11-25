@@ -4,20 +4,29 @@ using Newtonsoft.Json;
 
 namespace NetChess;
 
-public class LocalClient : Client
+/// <summary>
+/// Client-side representation of the client itself
+/// </summary>
+public class LocalClient : ClientMessageTypeOwner
 {
+    private readonly string _ip;
+    private readonly int _targetPort;
+    private readonly string _connectionKey;
     private readonly NetManager _client;
-    private readonly NetPeer _server;
+    private NetPeer _server;
 
     public event Action<RemoteId, IClientMessage>? ReceivedMessage;
     public event Action? Disconnected;
 
     public LocalClient(string ip, int targetPort, string connectionKey)
     {
+        _ip = ip;
+        _targetPort = targetPort;
+        _connectionKey = connectionKey;
         var listener = new EventBasedNetListener();
         _client = new NetManager(listener);
         _client.Start();
-        _server = _client.Connect(ip, targetPort, connectionKey);
+        _server = _client.Connect(_ip, _targetPort, _connectionKey);
 
         listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod, channel) =>
         {
@@ -42,6 +51,14 @@ public class LocalClient : Client
             Console.WriteLine($"{peer.EndPoint} disconnected by {disconnectInfo.Reason}");
             Disconnected?.Invoke();
         };
+    }
+
+    public void Restart()
+    {
+        Stop();
+        
+        _client.Start();
+        _server = _client.Connect(_ip, _targetPort, _connectionKey);
     }
 
     public void Update()

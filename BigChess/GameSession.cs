@@ -1,4 +1,5 @@
-﻿using ExplogineMonoGame;
+﻿using ChessCommon;
+using ExplogineMonoGame;
 using ExplogineMonoGame.Data;
 using ExplogineMonoGame.Input;
 using Microsoft.Xna.Framework;

@@ -1,7 +1,7 @@
 using ExplogineMonoGame.Data;
 using Microsoft.Xna.Framework;
 
-namespace BigChess;
+namespace ChessCommon;
 
 public readonly record struct BoardRectangle(BoardData BoardData, RectangleF PixelRect, Point GridPosition)
 {

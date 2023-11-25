@@ -1,8 +1,7 @@
-using System.Collections.Generic;
 using ExplogineMonoGame.Data;
 using Microsoft.Xna.Framework;
 
-namespace BigChess;
+namespace ChessCommon;
 
 public readonly record struct ChessPiece
 {
@@ -12,9 +11,8 @@ public readonly record struct ChessPiece
     public bool HasMoved { get; init; }
     public PieceColor Color { get; init; }
 
-    
     /// <summary>
-    /// Gets all moves the player can actually make (paying attention to Check rules)
+    ///     Gets all moves the player can actually make (paying attention to Check rules)
     /// </summary>
     /// <returns></returns>
     public List<ChessMove> GetPermittedMoves(ChessBoard board)
@@ -34,10 +32,9 @@ public readonly record struct ChessPiece
 
         return validMoves;
     }
-    
 
     /// <summary>
-    /// Gets all moves of the piece could hypothetically do ignoring Check rules.
+    ///     Gets all moves of the piece could hypothetically do ignoring Check rules.
     /// </summary>
     /// <returns></returns>
     public List<ChessMove> GetNormalMoves(ChessBoard board)

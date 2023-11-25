@@ -2,11 +2,11 @@
 
 namespace NetChess;
 
-public abstract class Client
+public abstract class ClientMessageTypeOwner
 {
     public readonly Dictionary<string, Type> TypeLookup = new();
 
-    public Client()
+    protected ClientMessageTypeOwner()
     {
         foreach (var type in Reflection.GetAllTypesThatDeriveFrom<IClientMessage>())
         {

@@ -1,1 +1,1 @@
-dotnet run --project .\Server
+dotnet run --project .\ChessServer

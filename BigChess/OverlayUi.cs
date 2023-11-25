@@ -1,4 +1,5 @@
 ﻿using System;
+using ChessCommon;
 using ExplogineMonoGame;
 using ExplogineMonoGame.Data;
 using ExplogineMonoGame.Rails;

@@ -1,10 +1,6 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using ExplogineMonoGame;
 using Microsoft.Xna.Framework;
 
-namespace BigChess;
+namespace ChessCommon;
 
 public class ChessBoard
 {
@@ -32,7 +28,7 @@ public class ChessBoard
         }
         else
         {
-            Client.Debug.LogWarning($"Tried to promote {id} but it does not exist");
+            // Client.Debug.LogWarning($"Tried to promote {id} but it does not exist");
         }
     }
     

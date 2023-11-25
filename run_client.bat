@@ -1,1 +1,1 @@
-.\TestClient\bin\Debug\net6.0\TestClient.exe
+.\BigChess\bin\Debug\net6.0\BigChess.exe --server=localhost --port=58569
