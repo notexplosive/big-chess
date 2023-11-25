@@ -2,21 +2,20 @@
 
 namespace NetChess;
 
-public static class Server
+public class Server
 {
-    public static void Run(int port, string connectionKey, Dictionary<string, Type> typeLookup,
-        Action<int, IClientMessage, RemoteClientCollection> onMessage,
-        int maxConnections = 10)
-    {
-        var listener = new EventBasedNetListener();
-        var server = new NetManager(listener);
-        var remoteClients = new RemoteClientCollection();
+    private readonly NetManager _server;
 
-        server.Start(port);
+    public Server(string connectionKey, Dictionary<string, Type> typeLookup, int maxConnections = 10)
+    {
+
+        var listener = new EventBasedNetListener();
+        _server = new NetManager(listener);
+        var remoteClients = new RemoteClientCollection();
 
         listener.ConnectionRequestEvent += request =>
         {
-            if (server.ConnectedPeersCount < maxConnections)
+            if (_server.ConnectedPeersCount < maxConnections)
             {
                 request.AcceptIfKey(connectionKey);
             }
@@ -37,7 +36,7 @@ public static class Server
 
             if (parseResult is MessageParse.SuccessfulParseResult successfulParseResult)
             {
-                onMessage(successfulParseResult.SenderId, successfulParseResult.Payload, remoteClients);
+                OnMessage(successfulParseResult.SenderId, successfulParseResult.Payload, remoteClients);
             }
             else
             {
@@ -50,7 +49,7 @@ public static class Server
             Console.WriteLine($"{fromPeer.EndPoint} connected");
 
             var client = remoteClients.AddFromPeer(fromPeer);
-            client.SendFromServer(new IdIssuedMessage{Id = client.Id});
+            client.SendFromServer(new IdIssuedMessage {Id = client.Id});
             remoteClients.BroadcastFromServer(new JoinMessage {Id = client.Id});
         };
 
@@ -65,13 +64,27 @@ public static class Server
                 Reason = disconnectInfo.Reason
             });
         };
+    }
 
-        while (!Console.KeyAvailable)
-        {
-            server.PollEvents();
-            Thread.Sleep(15);
-        }
+    private void OnMessage(int senderId, IClientMessage payload, RemoteClientCollection remoteClients)
+    {
+        MessageReceived?.Invoke(senderId, payload, remoteClients);
+    }
 
-        server.Stop();
+    public event Action<int, IClientMessage, RemoteClientCollection>? MessageReceived;
+
+    public void Start(int port)
+    {
+        _server.Start(port);
+    }
+
+    public void Update()
+    {
+        _server.PollEvents();
+    }
+
+    public void Stop()
+    {
+        _server.Stop();
     }
 }

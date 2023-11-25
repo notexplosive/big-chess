@@ -19,35 +19,43 @@ string LookupSenderName(int id)
     return nameLookup.TryGetValue(id, out var value) ? value : "???";
 }
 
-Server.Run(9050, "SomeConnectionKey",
-    typeLookup,
-    (sourceId, payload, remoteClients) =>
+var server = new Server("SomeConnectionKey",
+    typeLookup);
+
+server.MessageReceived += (sourceId, payload, remoteClients) =>
+{
+    Console.WriteLine($"Received {payload.GetType().Name} from {sourceId}");
+    if (payload is RenameRequest request)
     {
-        // TODO: this lambda should take a much friendlier "ServerState" object so we don't need to do nonsense like this to find source
-        var source = remoteClients.FindFromId(sourceId);
+        // Actually do the name change
+        nameLookup[sourceId] = request.Name;
 
-        Console.WriteLine($"Received {payload.GetType().Name} from {sourceId}");
-        if (payload is RenameRequest request)
+        // Confirm name change to client
+        remoteClients.SendToClientFromServer(sourceId, new ConfirmName
         {
-            // Actually do the name change
-            nameLookup[sourceId] = request.Name;
+            Name = request.Name
+        });
+    }
+    else if (payload is ChatMessageFromClient outgoingChatMessage)
+    {
+        // Repackage as a message from the server
+        remoteClients.BroadcastFromClient(sourceId,
+            new ChatMessageFromServer
+                {Content = outgoingChatMessage.Content, SenderName = LookupSenderName(sourceId)});
+    }
+    else
+    {
+        // Rebroadcast
+        remoteClients.BroadcastFromClient(sourceId, payload);
+    }
+};
 
-            // Confirm name change to client
-            remoteClients.SendToClientFromServer(sourceId, new ConfirmName
-            {
-                Name = request.Name
-            });
-        }
-        else if (payload is ChatMessageFromClient outgoingChatMessage)
-        {
-            // Repackage as a message from the server
-            remoteClients.BroadcastFromClient(sourceId,
-                new ChatMessageFromServer
-                    {Content = outgoingChatMessage.Content, SenderName = LookupSenderName(sourceId)});
-        }
-        else
-        {
-            // Rebroadcast
-            remoteClients.BroadcastFromClient(sourceId, payload);
-        }
-    });
+server.Start(54321);
+
+while (!Console.KeyAvailable)
+{
+    server.Update();
+    Thread.Sleep(15);
+}
+
+server.Stop();

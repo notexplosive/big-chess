@@ -10,7 +10,7 @@ public class ConsoleGame
     public void Run()
     {
         var consoleInput = new ConsoleInput();
-        var client = new LocalClient("localhost", 9050, "SomeConnectionKey");
+        var client = new LocalClient("localhost", 54321, "SomeConnectionKey");
         
         new LoadBearingDummy();
 
@@ -18,7 +18,7 @@ public class ConsoleGame
         
         client.Disconnected += Quit;
 
-        client.RecievedMessage += OnMessage;
+        client.ReceivedMessage += OnMessage;
 
         consoleInput.Submitted += content =>
         {

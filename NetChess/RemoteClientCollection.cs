@@ -62,11 +62,11 @@ public class RemoteClientCollection
         return _content.Find(a => a.Id == clientId);
     }
 
-    public void BroadcastFromClient(int sourceId, IClientMessage message)
+    public void BroadcastFromClient(int originalSenderId, IClientMessage message)
     {
         foreach (var client in _content)
         {
-            client.SendObject(sourceId, message);
+            client.SendObject(originalSenderId, message);
         }
     }
 

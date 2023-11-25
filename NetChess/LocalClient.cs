@@ -9,7 +9,7 @@ public class LocalClient : Client
     private readonly NetManager _client;
     private readonly NetPeer _server;
 
-    public event Action<int, IClientMessage>? RecievedMessage;
+    public event Action<int, IClientMessage>? ReceivedMessage;
     public event Action? Disconnected;
 
     public LocalClient(string ip, int targetPort, string connectionKey)
@@ -28,7 +28,7 @@ public class LocalClient : Client
 
             if (result is MessageParse.SuccessfulParseResult successfulParseResult)
             {
-                RecievedMessage?.Invoke(result.SenderId,successfulParseResult.Payload);
+                ReceivedMessage?.Invoke(result.SenderId,successfulParseResult.Payload);
             }
 
             if (result is MessageParse.FailedParseResult failedParseResult)
