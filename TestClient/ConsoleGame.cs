@@ -1,4 +1,5 @@
 ﻿using NetChess;
+using TestCommon;
 
 namespace TestClient;
 
@@ -9,9 +10,34 @@ public class ConsoleGame
     public void Run()
     {
         var consoleInput = new ConsoleInput();
-        var client = new Client("localhost", 9050, "SomeConnectionKey");
+        var client = new LocalClient("localhost", 9050, "SomeConnectionKey");
+        
+        new LoadBearingDummy();
 
-        consoleInput.Submitted += input => { client.Send(input); };
+        Console.WriteLine($"known types: {string.Join(", ", client.TypeLookup.Keys)}");
+        
+        client.Disconnected += Quit;
+
+        client.RecievedMessage += OnMessage;
+
+        consoleInput.Submitted += content =>
+        {
+            if (content.StartsWith("/name "))
+            {
+                var split = content.Split().ToList();
+                split.RemoveAt(0);
+                var nameArg = string.Join(' ', split);
+
+                client.SendObject(new RenameRequest {Name = nameArg});
+            }
+            else
+            {
+                client.SendObject(new ChatMessageFromClient
+                {
+                    Content = content
+                });
+            }
+        };
         consoleInput.Finished += Quit;
 
         var task = new Task(() =>
@@ -30,6 +56,22 @@ public class ConsoleGame
         }
 
         client.Stop();
+    }
+
+    private void OnMessage(int id, IClientMessage message)
+    {
+        if (message is ChatMessageFromServer chatMessage)
+        {
+            Console.WriteLine(chatMessage.ToString());
+        }
+        else if (message is ConfirmName confirmName)
+        {
+            Console.WriteLine($"Your name is now {confirmName.Name}");
+        }
+        else
+        {
+            Console.WriteLine($"GOT: {id} {message}");
+        }
     }
 
     public void Quit()

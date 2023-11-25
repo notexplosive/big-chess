@@ -1,18 +1,19 @@
 ﻿using LiteNetLib;
-using LiteNetLib.Utils;
 
 namespace NetChess;
 
 public static class Server
 {
-    public static void Run(int port, string connectionKey, int maxConnections = 10)
+    public static void Run(int port, string connectionKey, Dictionary<string, Type> typeLookup,
+        Action<int, IClientMessage, RemoteClientCollection> onMessage,
+        int maxConnections = 10)
     {
         var listener = new EventBasedNetListener();
         var server = new NetManager(listener);
-        var peers = new List<NetPeer>();
-        
+        var remoteClients = new RemoteClientCollection();
+
         server.Start(port);
-        
+
         listener.ConnectionRequestEvent += request =>
         {
             if (server.ConnectedPeersCount < maxConnections)
@@ -24,42 +25,51 @@ public static class Server
                 request.Reject();
             }
         };
-        
+
         listener.NetworkReceiveEvent += (fromPeer, reader, channel, method) =>
         {
             var content = reader.GetString();
-            Console.WriteLine($"{fromPeer.Id}: {content}");
-            var writer = new NetDataWriter();
-            writer.Put($"{fromPeer.Id}: {content}");
-        
-            foreach (var peer in peers)
+            reader.Recycle();
+
+            var sourceId = remoteClients.PeerToId(fromPeer);
+
+            var parseResult = MessageParse.ParseResultMessage($"{sourceId}:{content}", typeLookup);
+
+            if (parseResult is MessageParse.SuccessfulParseResult successfulParseResult)
             {
-                peer.Send(writer, DeliveryMethod.ReliableOrdered);
+                onMessage(successfulParseResult.SenderId, successfulParseResult.Payload, remoteClients);
+            }
+            else
+            {
+                Console.WriteLine($"Failed parse: {content}");
             }
         };
-        
-        listener.PeerConnectedEvent += peer =>
+
+        listener.PeerConnectedEvent += fromPeer =>
         {
-            Console.WriteLine($"{peer.EndPoint} connected");
-            var writer = new NetDataWriter();
-            writer.Put("Hello client!");
-            peer.Send(writer, DeliveryMethod.ReliableOrdered);
-            peers.Add(peer);
+            Console.WriteLine($"{fromPeer.EndPoint} connected");
+            remoteClients.Add(new RemoteClient(fromPeer));
+            remoteClients.BroadcastFromServer(new JoinMessage {Id = fromPeer.Id});
         };
-        
-        listener.PeerDisconnectedEvent += (peer, disconnectInfo) =>
+
+        listener.PeerDisconnectedEvent += (fromPeer, disconnectInfo) =>
         {
-            Console.WriteLine($"{peer.EndPoint} disconnected by {disconnectInfo.Reason}");
-            peers.Remove(peer);
+            Console.WriteLine($"{fromPeer.EndPoint} disconnected by {disconnectInfo.Reason}");
+            remoteClients.RemoveAllMatchingPeer(fromPeer);
+
+            remoteClients.BroadcastFromServer(new LeaveMessage
+            {
+                Id = fromPeer.Id,
+                Reason = disconnectInfo.Reason
+            });
         };
-        
+
         while (!Console.KeyAvailable)
         {
             server.PollEvents();
             Thread.Sleep(15);
         }
-        
-        server.Stop();
 
+        server.Stop();
     }
 }

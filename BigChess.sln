@@ -33,6 +33,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestClient", "TestClient\Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetChess", "NetChess\NetChess.csproj", "{F04B15FC-D91E-42EB-A88B-B9913D4AEFE7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestCommon", "TestCommon\TestCommon.csproj", "{28D3B895-E855-436E-A958-1FD0389CC0AB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -86,6 +88,10 @@ Global
 		{F04B15FC-D91E-42EB-A88B-B9913D4AEFE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F04B15FC-D91E-42EB-A88B-B9913D4AEFE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F04B15FC-D91E-42EB-A88B-B9913D4AEFE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28D3B895-E855-436E-A958-1FD0389CC0AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28D3B895-E855-436E-A958-1FD0389CC0AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28D3B895-E855-436E-A958-1FD0389CC0AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28D3B895-E855-436E-A958-1FD0389CC0AB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{B91377D3-0DFD-4684-B6EC-5B648767A985} = {2AAC9F48-EAE0-4DF3-A649-712824C3E893}

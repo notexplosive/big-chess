@@ -13,6 +13,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\NetChess\NetChess.csproj" />
+      <ProjectReference Include="..\TestCommon\TestCommon.csproj" />
     </ItemGroup>
 
 </Project>

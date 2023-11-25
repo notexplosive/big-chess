@@ -8,6 +8,11 @@
 
     <ItemGroup>
       <PackageReference Include="LiteNetLib" Version="1.1.0" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\explogine\Library\ExplogineCore\ExplogineCore.csproj" />
     </ItemGroup>
 
 </Project>
