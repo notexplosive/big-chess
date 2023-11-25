@@ -48,8 +48,10 @@ public static class Server
         listener.PeerConnectedEvent += fromPeer =>
         {
             Console.WriteLine($"{fromPeer.EndPoint} connected");
-            remoteClients.Add(new RemoteClient(fromPeer));
-            remoteClients.BroadcastFromServer(new JoinMessage {Id = fromPeer.Id});
+
+            var client = remoteClients.AddFromPeer(fromPeer);
+            client.SendFromServer(new IdIssuedMessage{Id = client.Id});
+            remoteClients.BroadcastFromServer(new JoinMessage {Id = client.Id});
         };
 
         listener.PeerDisconnectedEvent += (fromPeer, disconnectInfo) =>

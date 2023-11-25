@@ -1,11 +1,10 @@
-﻿using System.Collections;
-using LiteNetLib;
+﻿using LiteNetLib;
 
 namespace NetChess;
 
 public class RemoteClientCollection
 {
-    private List<RemoteClient> _content = new();
+    private readonly List<RemoteClient> _content = new();
 
     public RemoteClient? PeerToClient(NetPeer fromPeer)
     {
@@ -52,6 +51,12 @@ public class RemoteClientCollection
         }
     }
 
+    public void SendToClientFromServer(int targetId, IClientMessage message)
+    {
+        var source = FindFromId(targetId);
+        source?.SendObject(-1, message);
+    }
+
     public RemoteClient? FindFromId(int clientId)
     {
         return _content.Find(a => a.Id == clientId);
@@ -63,5 +68,12 @@ public class RemoteClientCollection
         {
             client.SendObject(sourceId, message);
         }
+    }
+
+    public RemoteClient AddFromPeer(NetPeer fromPeer)
+    {
+        var newClient = new RemoteClient(fromPeer);
+        _content.Add(newClient);
+        return newClient;
     }
 }

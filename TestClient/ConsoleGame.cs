@@ -68,6 +68,18 @@ public class ConsoleGame
         {
             Console.WriteLine($"Your name is now {confirmName.Name}");
         }
+        else if (message is IdIssuedMessage idIssuedMessage)
+        {
+            Console.WriteLine($"Your were issued the ID: {idIssuedMessage.Id}");
+        }
+        else if (message is JoinMessage joinMessage)
+        {
+            Console.WriteLine($"{joinMessage.Id} has joined the chat");
+        }
+        else if (message is LeaveMessage leaveMessage)
+        {
+            Console.WriteLine($"{leaveMessage.Id} has left the chat by {leaveMessage.Reason}");
+        }
         else
         {
             Console.WriteLine($"GOT: {id} {message}");

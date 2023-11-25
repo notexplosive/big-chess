@@ -25,7 +25,12 @@ public class RemoteClient : Client
 
     public void SendObject(int senderId, IClientMessage message)
     {
-        Console.WriteLine($"Sending {message.GetType().Name} to {senderId}");
+        Console.WriteLine($"Sending {message.GetType().Name} to {Id}");
         SendString(senderId, $"{JsonConvert.SerializeObject(message)}");
+    }
+
+    public void SendFromServer(IClientMessage message)
+    {
+        SendObject(-1, message);
     }
 }

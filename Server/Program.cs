@@ -12,17 +12,11 @@ foreach (var type in Reflection.GetAllTypesThatDeriveFrom<IClientMessage>())
     Console.WriteLine(TypeUtilities.GetTypeName(type));
 }
 
-var nameLookup = new Dictionary<RemoteClient, string>();
+var nameLookup = new Dictionary<int, string>();
 
-string LookupSenderName(RemoteClient? client)
+string LookupSenderName(int id)
 {
-    var unknown = "???";
-    if (client == null)
-    {
-        return unknown;
-    }
-
-    return nameLookup.TryGetValue(client, out var value) ? value : unknown;
+    return nameLookup.TryGetValue(id, out var value) ? value : "???";
 }
 
 Server.Run(9050, "SomeConnectionKey",
@@ -35,21 +29,21 @@ Server.Run(9050, "SomeConnectionKey",
         Console.WriteLine($"Received {payload.GetType().Name} from {sourceId}");
         if (payload is RenameRequest request)
         {
-            if (source != null)
+            // Actually do the name change
+            nameLookup[sourceId] = request.Name;
+
+            // Confirm name change to client
+            remoteClients.SendToClientFromServer(sourceId, new ConfirmName
             {
-                nameLookup[source] = request.Name;
-                source.SendObject(-1, new ConfirmName
-                {
-                    Name = request.Name
-                });
-            }
+                Name = request.Name
+            });
         }
         else if (payload is ChatMessageFromClient outgoingChatMessage)
         {
             // Repackage as a message from the server
             remoteClients.BroadcastFromClient(sourceId,
                 new ChatMessageFromServer
-                    {Content = outgoingChatMessage.Content, SenderName = LookupSenderName(source)});
+                    {Content = outgoingChatMessage.Content, SenderName = LookupSenderName(sourceId)});
         }
         else
         {
