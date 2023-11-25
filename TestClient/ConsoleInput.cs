@@ -2,23 +2,23 @@
 
 public class ConsoleInput
 {
-    public async void Poll()
+    public void Update()
     {
         string? input = null;
-        while (input?.Trim() != "exit")
-        {
-            input = await Console.In.ReadLineAsync();
+        input = Console.ReadLine();
 
-            if (!string.IsNullOrEmpty(input))
-            {
-                SentData?.Invoke(input!);
-            }
+        if (!string.IsNullOrEmpty(input))
+        {
+            Submitted?.Invoke(input!);
         }
-        
-        Finished?.Invoke();
+
+        if (input == "exit")
+        {
+            Finished?.Invoke();
+        }
     }
 
-    public event Action<string>? SentData;
+    public event Action<string>? Submitted;
 
     public event Action? Finished;
 }
